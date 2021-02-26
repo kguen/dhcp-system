@@ -1,0 +1,25 @@
+{
+  "env": {
+    "browser": true,
+    "commonjs": true,
+    "es2021": true,
+    "node": true
+  },
+  "extends": ["airbnb-base", "prettier", "plugin:node/recommended"],
+  "plugins": ["prettier"],
+  "parserOptions": {
+    "ecmaVersion": 12
+  },
+  "rules": {
+    "import/no-dynamic-require": "off",
+    "no-nested-ternary": "off",
+    "no-unused-vars": "warn",
+    "no-console": "off",
+    "prettier/prettier": [
+      "error",
+      {
+        "no-mixed-spaces-and-tabs": ["error", "smart-tabs"]
+      }
+    ]
+  }
+}
