@@ -1,17 +1,19 @@
 const express = require('express');
+const { isAuthenticated, isAdmin } = require('../middlewares');
 const {
   index,
   create,
-  show,
   update,
   destroy,
 } = require('../controllers/user.controller');
 
 const router = express.Router();
 
+router.use(isAuthenticated);
+router.use(isAdmin);
+
 router.get('/', index);
 router.post('/', create);
-router.get('/:id', show);
 router.patch('/:id', update);
 router.delete('/:id', destroy);
 

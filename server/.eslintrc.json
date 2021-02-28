@@ -14,7 +14,8 @@
     "import/no-dynamic-require": "off",
     "no-nested-ternary": "off",
     "no-unused-vars": "warn",
-    "no-console": "off",
+    "no-console": "warn",
+    "consistent-return": "off",
     "prettier/prettier": [
       "error",
       {

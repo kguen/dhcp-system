@@ -1,4 +1,5 @@
 const express = require('express');
+const { isAuthenticated, isAdmin } = require('../middlewares');
 const {
   index,
   create,
@@ -7,6 +8,9 @@ const {
 } = require('../controllers/organization.controller');
 
 const router = express.Router();
+
+router.use(isAuthenticated);
+router.use(isAdmin);
 
 router.get('/', index);
 router.post('/', create);

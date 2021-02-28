@@ -1,4 +1,5 @@
 const { Model } = require('sequelize');
+const { phoneRegex } = require('../constants');
 
 module.exports = (sequelize, DataTypes) => {
   class Organization extends Model {
@@ -15,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
       fullName: DataTypes.STRING,
       phone: {
         validate: {
-          is: /(03|05|07|08|09|01[2689])([0-9]{8})\b/,
+          is: phoneRegex,
         },
         type: DataTypes.STRING,
       },
