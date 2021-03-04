@@ -6,7 +6,7 @@ const authRoute = require('./routes/auth');
 
 const app = express();
 const router = express.Router();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3030;
 
 router.use('/users', usersRoute);
 router.use('/orgs', orgsRoute);
