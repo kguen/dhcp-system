@@ -1,6 +1,7 @@
 import { createContext } from 'react';
+import { ALERT_TYPE } from '../constants';
 
 export const AlertContext = createContext({
   message: null,
-  error: false,
+  type: ALERT_TYPE.success,
 });

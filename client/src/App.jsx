@@ -5,6 +5,8 @@ import { Home } from './components/Home';
 import { PrivateRoute } from './components/PrivateRoute';
 import { Login } from './components/Login';
 import { UserContext, AlertContext } from './contexts';
+import { dhcpApi, tokenConfig } from './utils';
+import { ALERT_TYPE } from './constants';
 import './App.scss';
 
 export const App = () => {
@@ -14,8 +16,9 @@ export const App = () => {
   });
   const [alert, setAlert] = useState({
     message: null,
-    error: false,
+    type: ALERT_TYPE.success,
   });
+  const [timerId, setTimerId] = useState(null);
 
   const providerUserValue = useMemo(() => ({ user, setUser }), [user, setUser]);
   const providerAlertValue = useMemo(() => ({ alert, setAlert }), [
@@ -24,22 +27,46 @@ export const App = () => {
   ]);
 
   useEffect(() => {
+    if (user.token) {
+      dhcpApi
+        .get('/auth/me', tokenConfig(user))
+        .then(({ data }) => setUser({ ...user, data }))
+        .catch(() => {
+          localStorage.removeItem('token');
+          setUser({
+            ...user,
+            token: null,
+          });
+          setAlert({
+            message: 'Đã xảy ra lỗi máy chủ!',
+            type: ALERT_TYPE.error,
+          });
+        });
+    }
+  }, [user.token]);
+
+  useEffect(() => {
     if (alert.message) {
-      setTimeout(() => {
+      clearTimeout(timerId);
+      const newTimerId = setTimeout(() => {
         setAlert({ message: null });
       }, 2000);
+      setTimerId(newTimerId);
     }
   }, [alert]);
 
   return (
     <UserContext.Provider value={providerUserValue}>
       <AlertContext.Provider value={providerAlertValue}>
-        <div className="app-container">
+        <div className="app-container d-flex flex-column">
           <Alert
             show={alert.message}
             className="my-alert align-self-center"
-            variant={alert.error ? 'danger' : 'success'}
-            onClick={() => setAlert({ message: null })}
+            variant={alert.type}
+            onClick={() => {
+              setAlert({ message: null });
+              clearTimeout(timerId);
+            }}
           >
             {alert.message}
           </Alert>

@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { Route, Redirect } from 'react-router-dom';
+import { ALERT_TYPE } from '../../constants';
 import { UserContext, AlertContext } from '../../contexts';
 
 export const PrivateRoute = ({ component: Component, ...rest }) => {
@@ -14,9 +15,8 @@ export const PrivateRoute = ({ component: Component, ...rest }) => {
           return <Component {...props} />;
         }
         setAlert({
-          hasAlert: true,
-          message: 'Bạn cần phải đăng nhập để truy cập hệ thống',
-          error: true,
+          message: 'Bạn cần phải đăng nhập để truy cập hệ thống!',
+          type: ALERT_TYPE.warning,
         });
         return <Redirect to="/login" />;
       }}

@@ -1,5 +1,6 @@
 const express = require('express');
-const bodyParser = require('body-parser');
+const morgan = require('morgan');
+const cors = require('cors');
 const usersRoute = require('./routes/users');
 const orgsRoute = require('./routes/organizations');
 const authRoute = require('./routes/auth');
@@ -12,7 +13,10 @@ router.use('/users', usersRoute);
 router.use('/orgs', orgsRoute);
 router.use('/auth', authRoute);
 
-app.use(bodyParser.json());
+app.use(morgan('dev'));
+app.use(cors());
+app.use(express.json());
+
 app.use('/api', router);
 
 app.listen(port, () => {

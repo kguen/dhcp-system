@@ -22,9 +22,6 @@ module.exports = {
           key: 'id',
         },
       },
-      password: {
-        type: Sequelize.STRING,
-      },
       position: {
         type: Sequelize.STRING,
       },

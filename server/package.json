@@ -5,6 +5,10 @@
   "scripts": {
     "start": "node -r dotenv/config index.js",
     "dev": "nodemon -r dotenv/config index.js",
+    "ldap-seed": "node -r dotenv/config scripts/seedLDAP.js",
+    "ldap-purge": "node -r dotenv/config scripts/purgeLDAP.js",
+    "db-setup": "npx sequelize db:migrate && npx sequelize db:seed:all && yarn run ldap-seed",
+    "db-purge": "npx sequelize db:migrate:undo:all && yarn run ldap-purge",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -22,11 +26,12 @@
     "sequelize-cli": "^6.2.0"
   },
   "dependencies": {
-    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "ldapjs": "^2.2.4",
+    "morgan": "^1.10.0",
     "mysql2": "^2.2.5",
     "sequelize": "^6.5.0"
   }

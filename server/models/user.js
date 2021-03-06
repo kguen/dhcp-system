@@ -23,7 +23,6 @@ module.exports = (sequelize, DataTypes) => {
       },
       fullName: DataTypes.STRING,
       organizationId: DataTypes.INTEGER,
-      password: DataTypes.STRING,
       position: DataTypes.STRING,
       phone: {
         is: phoneRegex,
