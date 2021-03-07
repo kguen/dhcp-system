@@ -1,0 +1,40 @@
+.header-container {
+  padding: 0 7rem 0 7rem;
+  height: 50px;
+
+  .logo {
+    width: 30%;
+    font-size: 1.2rem;
+
+    span {
+      color: #015198;
+    }
+  }
+  .nav {
+    width: 40%;
+
+    .nav-link {
+      height: 100%;
+      font-weight: 500;
+      border-radius: 0;
+      border-bottom: 2px solid white;
+      transition: border-bottom 0.1s ease-in-out,
+        background-color 0.1s ease-in-out;
+    }
+    .nav-link:hover {
+      background-color: #c5d2f1;
+      border-bottom: 2px solid #c5d2f1;
+    }
+    .nav-link.my-active {
+      background-color: white;
+      border-bottom: 2px solid #5179d6;
+    }
+  }
+  .profile {
+    width: 30%;
+
+    .dropdown-menu {
+      min-width: 14rem;
+    }
+  }
+}

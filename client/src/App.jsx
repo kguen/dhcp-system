@@ -1,9 +1,18 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+} from 'react-router-dom';
 import { Alert } from 'react-bootstrap';
-import { Home } from './components/Home';
-import { PrivateRoute } from './components/PrivateRoute';
+import { Header } from './components/Header';
+import { Organizations } from './components/Organizations';
+import { Users } from './components/Users';
+import { Addresses } from './components/Addresses';
+import { Profile } from './components/Profile';
 import { Login } from './components/Login';
+import { PrivateRoute } from './components/PrivateRoute';
 import { UserContext, AlertContext } from './contexts';
 import { dhcpApi, tokenConfig } from './utils';
 import { ALERT_TYPE } from './constants';
@@ -71,11 +80,35 @@ export const App = () => {
             {alert.message}
           </Alert>
           <Router>
+            <Header />
             <Switch>
               <Route exact path="/login">
                 <Login />
               </Route>
-              <PrivateRoute exact path="/" component={Home} />
+              <div className="content-container">
+                <PrivateRoute
+                  exact
+                  path="/orgs"
+                  component={Organizations}
+                  adminRoute
+                />
+                <PrivateRoute
+                  exact
+                  path="/users"
+                  component={Users}
+                  adminRoute
+                />
+                <PrivateRoute
+                  exact
+                  path="/addresses"
+                  component={Addresses}
+                  adminRoute
+                />
+                <PrivateRoute exact path="/profile" component={Profile} />
+              </div>
+              <Route path="*">
+                <Redirect to={user.data?.isAdmin ? '/orgs' : '/profile'} />
+              </Route>
             </Switch>
           </Router>
         </div>

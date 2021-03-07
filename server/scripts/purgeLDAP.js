@@ -1,4 +1,5 @@
 const ldapjs = require('ldapjs');
+const { promisify } = require('util');
 const ldapConfig = require('../config/ldapConfig');
 
 const ldapClient = ldapjs.createClient(ldapConfig.clientOptions);
@@ -29,13 +30,14 @@ ldapClient.bind(ldapConfig.pwdUser, ldapConfig.pwdPassword, async bindErr => {
       });
       // search finished
       res.on('end', async () => {
+        // promisify LDAP function
+        const ldapDel = promisify(ldapClient.del).bind(ldapClient);
         // delete users and resolve all promises
-        const promises = dnArr.map(dn =>
-          ldapClient.del(dn, delArr => {
-            if (delArr) throw delArr;
+        await Promise.all(
+          dnArr.map(async dn => {
+            await ldapDel(dn);
           })
         );
-        await Promise.all(promises);
         // eslint-disable-next-line no-console
         console.log('Purging LDAP completed.');
         // eslint-disable-next-line no-process-exit

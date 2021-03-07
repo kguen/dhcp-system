@@ -1,4 +1,5 @@
 const ldapjs = require('ldapjs');
+const { promisify } = require('util');
 const ldapConfig = require('../config/ldapConfig');
 const { User } = require('../models');
 
@@ -17,14 +18,14 @@ ldapClient.bind(ldapConfig.pwdUser, ldapConfig.pwdPassword, async bindErr => {
     userPassword: 'abc123',
     objectClass: ['person', 'organizationalPerson', 'inetOrgPerson'],
   }));
+  // promisify LDAP function
+  const ldapAdd = promisify(ldapClient.add).bind(ldapClient);
   // insert data to ldap and resolve all promises
-  const promises = ldapUsers.map(user =>
-    ldapClient.add(`uid=${user.uid},ou=users,ou=system`, user, createErr => {
-      if (createErr) throw createErr;
+  await Promise.all(
+    ldapUsers.map(async user => {
+      await ldapAdd(`uid=${user.uid},ou=users,ou=system`, user);
     })
   );
-  await Promise.all(promises);
-
   // eslint-disable-next-line no-console
   console.log('Seeding LDAP completed.');
   // eslint-disable-next-line no-process-exit

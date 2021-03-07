@@ -1,11 +1,12 @@
 import React, { useContext } from 'react';
 import { Link, Redirect, useHistory } from 'react-router-dom';
 import { Form, Button } from 'react-bootstrap';
+import { Helmet } from 'react-helmet';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { UserContext, AlertContext } from '../../contexts';
-import { ALERT_TYPE } from '../../constants';
+import { ALERT_TYPE, SITE_TITLE } from '../../constants';
 import { dhcpApi } from '../../utils';
 import Logo from '../../assets/images/logo.png';
 
@@ -23,20 +24,21 @@ export const Login = () => {
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = data => {
+  const onSubmit = loginData => {
     dhcpApi
-      .post('/auth/login', data)
-      .then(res => {
-        localStorage.setItem('token', res.data.token);
+      .post('/auth/login', loginData)
+      .then(({ data }) => {
+        localStorage.setItem('token', data.token);
         setUser({
           ...user,
-          token: res.data.token,
+          token: data.token,
+          data: data.user,
         });
         setAlert({
           type: ALERT_TYPE.success,
           message: 'Đăng nhập thành công!',
         });
-        history.push('/');
+        history.push(data.user.isAdmin ? '/orgs' : '/profile');
       })
       .catch(err => {
         if (err.response.status === 401) {
@@ -57,6 +59,9 @@ export const Login = () => {
     <Redirect to="/" />
   ) : (
     <div className="vh-100 d-flex flex-column align-items-center justify-content-center container">
+      <Helmet>
+        <title>Đăng nhập | {SITE_TITLE}</title>
+      </Helmet>
       <Link className="mb-3" to="/">
         <img
           width="100"

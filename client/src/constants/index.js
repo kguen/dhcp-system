@@ -3,3 +3,5 @@ export const ALERT_TYPE = {
   warning: 'warning',
   success: 'success',
 };
+
+export const SITE_TITLE = 'Hệ thống quản lý IP';

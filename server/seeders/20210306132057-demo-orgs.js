@@ -18,8 +18,8 @@ module.exports = {
         updatedAt: new Date(),
       },
       {
-        abbreviation: 'khoa-dtvt',
-        fullName: 'Khoa Điện tử Viễn thông',
+        abbreviation: 'ttmt',
+        fullName: 'Trung tâm Máy tính',
         phone: '01234567890',
         address: '144 Xuân Thủy, Dịch Vọng Hậu, Cầu Giấy, Hà Nội',
         createdAt: new Date(),
