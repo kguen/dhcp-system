@@ -4,4 +4,6 @@ export const ALERT_TYPE = {
   success: 'success',
 };
 
-export const SITE_TITLE = 'Hệ thống quản lý IP';
+export const SITE_TITLE = 'Hệ thống DHCP';
+
+export const PAGE_SIZES = [5, 10, 15];

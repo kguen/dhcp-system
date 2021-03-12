@@ -7,12 +7,12 @@ import {
 } from 'react-router-dom';
 import { Alert } from 'react-bootstrap';
 import { Header } from './components/Header';
+import { Login } from './components/Login';
+import { PrivateRoute } from './components/PrivateRoute';
 import { Organizations } from './components/Organizations';
 import { Users } from './components/Users';
 import { Addresses } from './components/Addresses';
 import { Profile } from './components/Profile';
-import { Login } from './components/Login';
-import { PrivateRoute } from './components/PrivateRoute';
 import { UserContext, AlertContext } from './contexts';
 import { dhcpApi, tokenConfig } from './utils';
 import { ALERT_TYPE } from './constants';
@@ -27,6 +27,7 @@ export const App = () => {
     message: null,
     type: ALERT_TYPE.success,
   });
+  const [loading, setLoading] = useState(true);
   const [timerId, setTimerId] = useState(null);
 
   const providerUserValue = useMemo(() => ({ user, setUser }), [user, setUser]);
@@ -37,9 +38,13 @@ export const App = () => {
 
   useEffect(() => {
     if (user.token) {
+      setLoading(true);
       dhcpApi
         .get('/auth/me', tokenConfig(user))
-        .then(({ data }) => setUser({ ...user, data }))
+        .then(({ data }) => {
+          setUser({ ...user, data });
+          setLoading(false);
+        })
         .catch(() => {
           localStorage.removeItem('token');
           setUser({
@@ -50,7 +55,10 @@ export const App = () => {
             message: 'Đã xảy ra lỗi máy chủ!',
             type: ALERT_TYPE.error,
           });
+          setLoading(false);
         });
+    } else {
+      setLoading(false);
     }
   }, [user.token]);
 
@@ -64,12 +72,12 @@ export const App = () => {
     }
   }, [alert]);
 
-  return (
+  return loading ? null : (
     <UserContext.Provider value={providerUserValue}>
       <AlertContext.Provider value={providerAlertValue}>
         <div className="app-container d-flex flex-column">
           <Alert
-            show={alert.message}
+            show={!!alert.message}
             className="my-alert align-self-center"
             variant={alert.type}
             onClick={() => {
@@ -85,27 +93,20 @@ export const App = () => {
               <Route exact path="/login">
                 <Login />
               </Route>
-              <div className="content-container">
-                <PrivateRoute
-                  exact
-                  path="/orgs"
-                  component={Organizations}
-                  adminRoute
-                />
-                <PrivateRoute
-                  exact
-                  path="/users"
-                  component={Users}
-                  adminRoute
-                />
-                <PrivateRoute
-                  exact
-                  path="/addresses"
-                  component={Addresses}
-                  adminRoute
-                />
-                <PrivateRoute exact path="/profile" component={Profile} />
-              </div>
+              <PrivateRoute
+                exact
+                path="/orgs"
+                component={Organizations}
+                adminRoute
+              />
+              <PrivateRoute exact path="/users" component={Users} adminRoute />
+              <PrivateRoute
+                exact
+                path="/addresses"
+                component={Addresses}
+                adminRoute
+              />
+              <PrivateRoute exact path="/profile" component={Profile} />
               <Route path="*">
                 <Redirect to={user.data?.isAdmin ? '/orgs' : '/profile'} />
               </Route>

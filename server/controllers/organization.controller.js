@@ -1,9 +1,34 @@
-const { Organization } = require('../models');
+const { getPagination, getPagingData } = require('../utils');
+const {
+  Organization,
+  Sequelize: { Op },
+} = require('../models');
 
 const index = (req, res) => {
-  Organization.findAll()
-    .then(result => {
-      res.status(200).json(result);
+  const { page, size, abbreviation, fullName } = req.query;
+  const { limit, offset } = getPagination(page, size);
+  const condition = {};
+
+  if (abbreviation) condition.abbreviation = { [Op.like]: `%${abbreviation}%` };
+  if (fullName) condition.fullName = { [Op.like]: `%${fullName}%` };
+
+  Organization.findAndCountAll({ where: condition, limit, offset })
+    .then(data => {
+      const response = getPagingData(data, page, limit);
+      res.status(200).send(response);
+    })
+    .catch(errors => {
+      res.status(500).json({
+        message: 'Something went wrong!',
+        errors,
+      });
+    });
+};
+
+const list = (req, res) => {
+  Organization.findAll({ attributes: ['id', 'fullName'] })
+    .then(data => {
+      res.status(200).send(data);
     })
     .catch(errors => {
       res.status(500).json({
@@ -93,6 +118,7 @@ const destroy = (req, res) => {
 
 module.exports = {
   index,
+  list,
   create,
   update,
   destroy,

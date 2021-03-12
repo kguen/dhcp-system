@@ -1,10 +1,26 @@
 const ldapjs = require('ldapjs');
-const { User, Organization, sequelize } = require('../models');
 const ldapConfig = require('../config/ldapConfig');
 const { passwordRegex } = require('../constants');
+const { getPagination, getPagingData } = require('../utils');
+const {
+  User,
+  Organization,
+  sequelize,
+  Sequelize: { Op },
+} = require('../models');
 
 const index = (req, res) => {
-  User.findAll({
+  const { page, size, email, fullName, organizationId } = req.query;
+  const { limit, offset } = getPagination(page, size);
+  const condition = {};
+  if (email) condition.email = { [Op.like]: `%${email}%` };
+  if (fullName) condition.fullName = { [Op.like]: `%${fullName}%` };
+  if (+organizationId) condition.organizationId = +organizationId;
+
+  User.findAndCountAll({
+    limit,
+    offset,
+    where: condition,
     include: [
       {
         model: Organization,
@@ -13,8 +29,9 @@ const index = (req, res) => {
       },
     ],
   })
-    .then(result => {
-      res.status(200).json(result);
+    .then(data => {
+      const response = getPagingData(data, page, limit);
+      res.status(200).send(response);
     })
     .catch(errors => {
       res.status(500).json({

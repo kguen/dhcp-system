@@ -4,8 +4,8 @@ import { Dropdown } from 'react-bootstrap';
 import { AlertContext, UserContext } from '../../contexts';
 import Logo from '../../assets/images/logo.png';
 import Avatar from '../../assets/images/avatar.jpg';
-import './styles.scss';
 import { ALERT_TYPE } from '../../constants';
+import './styles.scss';
 
 export const Header = () => {
   const history = useHistory();
@@ -66,20 +66,10 @@ export const Header = () => {
           alt="uet logo"
           src={Logo}
         />
-        <span className="ml-2 font-w500">QUẢN LÝ IP - UET</span>
+        <span className="ml-2 font-w500">QUẢN TRỊ DHCP</span>
       </Link>
       {user.data?.isAdmin ? (
         <ul className="nav nav-pills nav-justified">
-          <li className="nav-item">
-            <Link
-              className={`nav-link d-flex align-items-center justify-content-center ${
-                location.pathname.includes('orgs') ? 'my-active' : ''
-              }`}
-              to="/orgs"
-            >
-              <i className="fa fa-fw fa-users mr-2" /> Đơn vị
-            </Link>
-          </li>
           <li className="nav-item">
             <Link
               className={`nav-link d-flex align-items-center justify-content-center ${
@@ -88,6 +78,16 @@ export const Header = () => {
               to="/users"
             >
               <i className="fa fa-fw fa-users mr-2" /> Người dùng
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link
+              className={`nav-link d-flex align-items-center justify-content-center ${
+                location.pathname.includes('orgs') ? 'my-active' : ''
+              }`}
+              to="/orgs"
+            >
+              <i className="fa fa-fw fa-users mr-2" /> Đơn vị / Subnet
             </Link>
           </li>
           <li className="nav-item">

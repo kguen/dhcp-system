@@ -11,15 +11,15 @@
     }
   }
   .nav {
-    width: 40%;
+    width: 45%;
 
     .nav-link {
       height: 100%;
       font-weight: 500;
       border-radius: 0;
       border-bottom: 2px solid white;
-      transition: border-bottom 0.1s ease-in-out,
-        background-color 0.1s ease-in-out;
+      transition: border-bottom 0.1s linear, background-color 0.1s linear,
+        color 0.1s linear;
     }
     .nav-link:hover {
       background-color: #c5d2f1;
@@ -28,6 +28,7 @@
     .nav-link.my-active {
       background-color: white;
       border-bottom: 2px solid #5179d6;
+      color: #5179d6;
     }
   }
   .profile {
@@ -35,6 +36,10 @@
 
     .dropdown-menu {
       min-width: 14rem;
+
+      .dropdown-item {
+        transition: background-color 0.1s linear;
+      }
     }
   }
 }
