@@ -72,48 +72,55 @@ export const App = () => {
     }
   }, [alert]);
 
-  return loading ? null : (
-    <UserContext.Provider value={providerUserValue}>
-      <AlertContext.Provider value={providerAlertValue}>
-        <div className="app-container d-flex flex-column">
-          <Alert
-            show={!!alert.message}
-            className="my-alert align-self-center"
-            variant={alert.type}
-            onClick={() => {
-              setAlert({ message: null });
-              clearTimeout(timerId);
-            }}
-          >
-            {alert.message}
-          </Alert>
-          <Router>
-            <Header />
-            <Switch>
-              <Route exact path="/login">
-                <Login />
-              </Route>
-              <PrivateRoute
-                exact
-                path="/orgs"
-                component={Organizations}
-                adminRoute
-              />
-              <PrivateRoute exact path="/users" component={Users} adminRoute />
-              <PrivateRoute
-                exact
-                path="/addresses"
-                component={Addresses}
-                adminRoute
-              />
-              <PrivateRoute exact path="/profile" component={Profile} />
-              <Route path="*">
-                <Redirect to={user.data?.isAdmin ? '/orgs' : '/profile'} />
-              </Route>
-            </Switch>
-          </Router>
-        </div>
-      </AlertContext.Provider>
-    </UserContext.Provider>
+  return (
+    !loading && (
+      <UserContext.Provider value={providerUserValue}>
+        <AlertContext.Provider value={providerAlertValue}>
+          <div className="app-container d-flex flex-column">
+            <Alert
+              show={!!alert.message}
+              className="my-alert align-self-center"
+              variant={alert.type}
+              onClick={() => {
+                setAlert({ message: null });
+                clearTimeout(timerId);
+              }}
+            >
+              {alert.message}
+            </Alert>
+            <Router>
+              <Header />
+              <Switch>
+                <Route exact path="/login">
+                  <Login />
+                </Route>
+                <PrivateRoute
+                  exact
+                  path="/orgs"
+                  component={Organizations}
+                  adminRoute
+                />
+                <PrivateRoute
+                  exact
+                  path="/users"
+                  component={Users}
+                  adminRoute
+                />
+                <PrivateRoute
+                  exact
+                  path="/addresses"
+                  component={Addresses}
+                  adminRoute
+                />
+                <PrivateRoute exact path="/profile" component={Profile} />
+                <Route path="*">
+                  <Redirect to={user.data?.isAdmin ? '/orgs' : '/profile'} />
+                </Route>
+              </Switch>
+            </Router>
+          </div>
+        </AlertContext.Provider>
+      </UserContext.Provider>
+    )
   );
 };

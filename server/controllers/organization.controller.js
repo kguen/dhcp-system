@@ -50,7 +50,7 @@ const create = (req, res) => {
     .then(result => {
       res.status(201).json({
         message: 'Created organization successfully!',
-        organization: result,
+        result,
       });
     })
     .catch(errors => {
@@ -72,16 +72,16 @@ const update = (req, res) => {
   };
   Organization.update(organization, { where: { id } })
     .then(async () => {
-      const updatedOrg = await Organization.findByPk(id);
+      const result = await Organization.findByPk(id);
 
-      if (!updatedOrg) {
+      if (!result) {
         res.status(404).json({
           message: 'Organization not found!',
         });
       } else {
         res.status(200).json({
           message: 'Organization updated successfully!',
-          organization: updatedOrg,
+          result,
         });
       }
     })

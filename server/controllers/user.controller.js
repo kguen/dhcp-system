@@ -97,7 +97,7 @@ const create = (req, res) => {
                     await transaction.commit();
                     res.status(201).json({
                       message: 'Created user successfully!',
-                      user: result,
+                      result,
                     });
                   }
                 }
@@ -175,10 +175,18 @@ const update = (req, res) => {
                     // commit transaction
                     await transaction.commit();
 
-                    const updatedUser = await User.findByPk(id);
+                    const result = await User.findByPk(id, {
+                      include: [
+                        {
+                          model: Organization,
+                          as: 'organization',
+                          attributes: ['id', 'fullName'],
+                        },
+                      ],
+                    });
                     res.status(200).json({
                       message: 'User updated successfully!',
-                      user: updatedUser,
+                      result,
                     });
                   }
                 }

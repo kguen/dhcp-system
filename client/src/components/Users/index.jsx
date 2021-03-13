@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { unstable_batchedUpdates } from 'react-dom';
 import { Helmet } from 'react-helmet';
 import { Form, Table, Pagination, Button, ButtonGroup } from 'react-bootstrap';
 import { UserContext, AlertContext } from '../../contexts';
@@ -10,7 +11,7 @@ export const Users = () => {
   const [records, setRecords] = useState([]);
   const [pageCount, setPageCount] = useState(0);
   const [recordCount, setRecordCount] = useState(0);
-  const [filter, setFilter] = useState(true);
+  const [refetch, setRefetch] = useState(true);
   const [orgList, setOrgList] = useState([]);
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
@@ -25,11 +26,13 @@ export const Users = () => {
   const fetchData = () => {
     dhcpApi
       .get('/users', { ...tokenConfig(user), params })
-      .then(({ data }) => {
-        setRecords(data.records);
-        setPageCount(data.pageCount);
-        setRecordCount(data.recordCount);
-      })
+      .then(({ data }) =>
+        unstable_batchedUpdates(() => {
+          setRecords(data.records);
+          setPageCount(data.pageCount);
+          setRecordCount(data.recordCount);
+        })
+      )
       .catch(() =>
         setAlert({
           message: 'Đã xảy ra lỗi máy chủ!',
@@ -52,19 +55,22 @@ export const Users = () => {
 
   const handleFilter = event => {
     event.preventDefault();
-    setFilter(!filter);
+    setParams({ ...params, page: 0 });
+    setRefetch(!refetch);
+  };
+
+  const handleEntryCountChange = event => {
+    setParams({ ...params, page: 0, size: event.target.value });
+    setRefetch(!refetch);
+  };
+
+  const handleOrgIdChange = event => {
+    setParams({ ...params, page: 0, organizationId: +event.target.value });
+    setRefetch(!refetch);
   };
 
   useEffect(() => fetchOrgList(), []);
-  useEffect(() => fetchData(), [params.page]);
-
-  useEffect(() => {
-    if (params.page) {
-      setParams({ ...params, page: 0 });
-    } else {
-      fetchData();
-    }
-  }, [params.size, params.organizationId, filter]);
+  useEffect(() => fetchData(), [params.page, refetch]);
 
   return (
     <div className="content-container users-container">
@@ -76,7 +82,7 @@ export const Users = () => {
         <div className="block-content">
           <Form
             className="d-flex align-items-center justify-content-between"
-            onSubmit={event => handleFilter(event)}
+            onSubmit={handleFilter}
           >
             <Form.Group
               className="d-flex align-items-center"
@@ -85,12 +91,7 @@ export const Users = () => {
               <Form.Control
                 as="select"
                 value={params.size}
-                onChange={event =>
-                  setParams({
-                    ...params,
-                    size: event.target.value,
-                  })
-                }
+                onChange={handleEntryCountChange}
               >
                 {PAGE_SIZES.map(item => (
                   <option key={item}>{item}</option>
@@ -107,12 +108,7 @@ export const Users = () => {
                 <Form.Control
                   as="select"
                   value={params.organizationId}
-                  onChange={event =>
-                    setParams({
-                      ...params,
-                      organizationId: +event.target.value,
-                    })
-                  }
+                  onChange={handleOrgIdChange}
                 >
                   <option value="0">Tất cả đơn vị</option>
                   {orgList.map(item => (
@@ -189,10 +185,10 @@ export const Users = () => {
               </tr>
             </thead>
             <tbody>
-              {records.map(item => (
+              {records.map((item, index) => (
                 <tr key={item.id}>
                   <td className="text-center font-w500 font-size-sm text-primary">
-                    {item.id}
+                    {params.page * params.size + index + 1}
                   </td>
                   <td className="text-center font-w600 font-size-sm">
                     {item.fullName}

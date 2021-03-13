@@ -12,11 +12,30 @@ module.exports = (sequelize, DataTypes) => {
   }
   Organization.init(
     {
-      abbreviation: DataTypes.STRING,
-      fullName: DataTypes.STRING,
+      abbreviation: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+        validate: {
+          notNull: true,
+          notEmpty: true,
+        },
+      },
+      fullName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notNull: true,
+          notEmpty: true,
+        },
+      },
       phone: {
         validate: {
-          is: phoneRegex,
+          isPhoneOrEmpty(value) {
+            if (!!value && !phoneRegex.test(value)) {
+              throw new Error('Phone number is invalid');
+            }
+          },
         },
         type: DataTypes.STRING,
       },

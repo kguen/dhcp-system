@@ -13,6 +13,7 @@ module.exports = {
         type: Sequelize.STRING,
       },
       fullName: {
+        allowNull: false,
         type: Sequelize.STRING,
       },
       organizationId: {

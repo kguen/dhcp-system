@@ -106,12 +106,7 @@ export const Login = () => {
                 {errors.password?.message}
               </Form.Control.Feedback>
             </Form.Group>
-            <Button
-              className="w-100"
-              data-toggle="click-ripple"
-              variant="primary"
-              type="submit"
-            >
+            <Button className="w-100" variant="primary" type="submit">
               Đăng nhập
             </Button>
           </Form>

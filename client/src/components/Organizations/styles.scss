@@ -1,12 +1,11 @@
 .orgs-container {
   .nav-link {
     cursor: pointer;
+    border: none;
+    outline: none;
     letter-spacing: 0.0625rem;
     text-transform: uppercase;
-    margin-bottom: none;
+    margin-bottom: 0;
     transition: color 0.1s linear;
-  }
-  .block-content .header-right {
-    width: 65%;
   }
 }
