@@ -51,7 +51,7 @@ const create = (req, res) => {
     phone: req.body?.phone,
     isAdmin: req.body?.isAdmin,
     note: req.body?.note,
-    organizationId: req.body?.organizationId,
+    organizationId: req.body?.organizationId || null,
   };
   const ldapUser = {
     uid: req.body?.username,

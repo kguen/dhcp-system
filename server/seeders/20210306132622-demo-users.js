@@ -256,7 +256,6 @@ module.exports = {
       {
         username: 'kiendh',
         fullName: 'Đỗ Hoàng Kiên',
-        position: 'Quản trị viên',
         email: 'kiendh@vnu.edu.vn',
         phone: '01234567890',
         isAdmin: true,
@@ -267,7 +266,6 @@ module.exports = {
       {
         username: 'linhht',
         fullName: 'Hoàng Tố Linh',
-        position: 'Quản trị viên',
         email: 'linhht@vnu.edu.vn',
         phone: '01234567890',
         isAdmin: true,
@@ -278,7 +276,6 @@ module.exports = {
       {
         username: 'nguyentrang',
         fullName: 'Nguyễn Trang',
-        position: 'Quản trị viên',
         email: 'nguyentrang@vnu.edu.vn',
         phone: '01234567890',
         isAdmin: true,

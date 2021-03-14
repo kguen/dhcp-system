@@ -30,14 +30,10 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
       phone: {
-        validate: {
-          isPhoneOrEmpty(value) {
-            if (!!value && !phoneRegex.test(value)) {
-              throw new Error('Phone number is invalid');
-            }
-          },
-        },
         type: DataTypes.STRING,
+        validate: {
+          is: phoneRegex,
+        },
       },
       address: DataTypes.STRING,
       note: DataTypes.TEXT,

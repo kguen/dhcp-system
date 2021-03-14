@@ -1,3 +1,9 @@
+import axios from 'axios';
+
+export const dhcpApi = axios.create({
+  baseURL: 'http://localhost:3030/api/',
+});
+
 export const tokenConfig = (user, formData = false) => {
   const config = {
     headers: {
@@ -9,3 +15,11 @@ export const tokenConfig = (user, formData = false) => {
   }
   return config;
 };
+
+export const sanitized = data =>
+  Object.fromEntries(
+    Object.entries(data).map(([key, value]) => [
+      key,
+      value === '' ? null : value,
+    ])
+  );

@@ -4,12 +4,13 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { PHONE_REGEX } from '../../../../constants';
+import { sanitized } from '../../../../utils';
 
 const schema = yup.object({
-  abbreviation: yup.string().required('Vui lòng nhập tên viết tắt.'),
-  fullName: yup.string().required('Vui lòng nhập tên đầy đủ.'),
-  phone: yup.string().matches(PHONE_REGEX, {
-    message: 'Vui lòng nhập số điện thoại đúng format.',
+  abbreviation: yup.string().trim().required('Vui lòng nhập tên viết tắt.'),
+  fullName: yup.string().trim().required('Vui lòng nhập tên đầy đủ.'),
+  phone: yup.string().trim().matches(PHONE_REGEX, {
+    message: 'Vui lòng nhập số điện thoại theo đúng format.',
     excludeEmptyString: true,
   }),
 });
@@ -29,19 +30,19 @@ export const AddOrg = ({ doSubmit }) => {
     resolver: yupResolver(schema),
   });
 
-  const showModal = () => setModal(true);
-  const hideModal = () => {
+  const showModal = () => {
     reset();
-    setModal(false);
+    setModal(true);
   };
+  const hideModal = () => setModal(false);
 
   const onSubmit = async data => {
     try {
-      await doSubmit(data);
+      await doSubmit(sanitized(data));
       hideModal();
     } catch {
       setError('abbreviation', {
-        message: 'Tên viết tắt của đơn vị đã tồn tại!',
+        message: 'Tên viết tắt này đã tồn tại!',
         shouldFocus: true,
       });
     }

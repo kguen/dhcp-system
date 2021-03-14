@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { unstable_batchedUpdates } from 'react-dom';
 import { Helmet } from 'react-helmet';
-import { Form, Table, Pagination, Button, ButtonGroup } from 'react-bootstrap';
+import { Form, Table, Button, ButtonGroup } from 'react-bootstrap';
+import { AddUser } from './AddUser';
+import { EditUser } from './EditUser';
+import { DeleteRecord } from '../DeleteRecord';
+import { Paging } from '../Paging';
 import { UserContext, AlertContext } from '../../contexts';
 import { dhcpApi, tokenConfig } from '../../utils';
 import { ALERT_TYPE, SITE_TITLE, PAGE_SIZES } from '../../constants';
@@ -12,6 +16,7 @@ export const Users = () => {
   const [pageCount, setPageCount] = useState(0);
   const [recordCount, setRecordCount] = useState(0);
   const [refetch, setRefetch] = useState(true);
+  const [toLastPage, setToLastPage] = useState(false);
   const [orgList, setOrgList] = useState([]);
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
@@ -23,7 +28,7 @@ export const Users = () => {
     organizationId: 0,
   });
 
-  const fetchData = () => {
+  const fetchData = () =>
     dhcpApi
       .get('/users', { ...tokenConfig(user), params })
       .then(({ data }) =>
@@ -31,6 +36,11 @@ export const Users = () => {
           setRecords(data.records);
           setPageCount(data.pageCount);
           setRecordCount(data.recordCount);
+
+          if (toLastPage) {
+            setParams({ ...params, page: data.pageCount - 1 });
+            setToLastPage(false);
+          }
         })
       )
       .catch(() =>
@@ -39,9 +49,8 @@ export const Users = () => {
           type: ALERT_TYPE.error,
         })
       );
-  };
 
-  const fetchOrgList = () => {
+  const fetchOrgList = () =>
     dhcpApi
       .get('/orgs/list', tokenConfig(user))
       .then(({ data }) => setOrgList(data))
@@ -51,7 +60,95 @@ export const Users = () => {
           type: ALERT_TYPE.error,
         })
       );
-  };
+
+  const addRecord = data =>
+    dhcpApi
+      .post('/users', data, tokenConfig(user))
+      .then(() => {
+        unstable_batchedUpdates(() => {
+          setParams({
+            ...params,
+            page: 0,
+            email: '',
+            fullName: '',
+            organizationId: 0,
+          });
+          setRefetch(!refetch);
+          setToLastPage(true);
+        });
+        setAlert({
+          message: 'Thêm bản ghi thành công!',
+          type: ALERT_TYPE.success,
+        });
+      })
+      .catch(err => {
+        if (
+          err.response?.data?.errors?.name === 'SequelizeUniqueConstraintError'
+        ) {
+          throw new Error();
+        } else {
+          setAlert({
+            message: 'Đã xảy ra lỗi máy chủ!',
+            type: ALERT_TYPE.error,
+          });
+        }
+      });
+
+  const editRecord = (data, id) =>
+    dhcpApi
+      .patch(`/users/${id}`, data, tokenConfig(user))
+      .then(({ data: { result } }) => {
+        setRecords(records.map(item => (item.id === id ? result : item)));
+        setAlert({
+          message: 'Cập nhật bản ghi thành công!',
+          type: ALERT_TYPE.success,
+        });
+      })
+      .catch(err => {
+        if (
+          err.response?.data?.errors?.name === 'SequelizeUniqueConstraintError'
+        ) {
+          throw new Error();
+        } else {
+          setAlert({
+            message: 'Đã xảy ra lỗi máy chủ!',
+            type: ALERT_TYPE.error,
+          });
+        }
+      });
+
+  const deleteRecord = id =>
+    dhcpApi
+      .delete(`/users/${id}`, tokenConfig(user))
+      .then(() => {
+        unstable_batchedUpdates(() => {
+          if (records.length > 1) {
+            setRecordCount(recordCount - 1);
+            setRecords(records.filter(item => item.id !== id));
+          } else if (recordCount > 1) {
+            setParams({ ...params, page: params.page - 1 });
+          } else {
+            setParams({
+              ...params,
+              page: 0,
+              email: '',
+              fullName: '',
+              organizationId: 0,
+            });
+            setRefetch(!refetch);
+          }
+        });
+        setAlert({
+          message: 'Xóa bản ghi thành công!',
+          type: ALERT_TYPE.success,
+        });
+      })
+      .catch(() =>
+        setAlert({
+          message: 'Đã xảy ra lỗi máy chủ!',
+          type: ALERT_TYPE.error,
+        })
+      );
 
   const handleFilter = event => {
     event.preventDefault();
@@ -60,7 +157,7 @@ export const Users = () => {
   };
 
   const handleEntryCountChange = event => {
-    setParams({ ...params, page: 0, size: event.target.value });
+    setParams({ ...params, page: 0, size: +event.target.value });
     setRefetch(!refetch);
   };
 
@@ -70,7 +167,7 @@ export const Users = () => {
   };
 
   useEffect(() => fetchOrgList(), []);
-  useEffect(() => fetchData(), [params.page, refetch]);
+  useEffect(() => fetchData(), [params.page, refetch, toLastPage]);
 
   return (
     <div className="content-container users-container">
@@ -80,10 +177,7 @@ export const Users = () => {
       <h3 className="text-center">Quản lý người dùng</h3>
       <div className="block block-rounded">
         <div className="block-content">
-          <Form
-            className="d-flex align-items-center justify-content-between"
-            onSubmit={handleFilter}
-          >
+          <div className="d-flex align-items-center justify-content-between">
             <Form.Group
               className="d-flex align-items-center"
               controlId="formEntryCount"
@@ -118,60 +212,57 @@ export const Users = () => {
                   ))}
                 </Form.Control>
               </Form.Group>
-              <Form.Group
-                className="d-flex align-items-center mr-3"
-                controlId="formFullName"
+              <Form
+                className="d-flex align-items-center"
+                onSubmit={handleFilter}
               >
-                <span className="mr-2 font-w500">Họ và tên:</span>
-                <Form.Control
-                  type="text"
-                  placeholder="Nhập truy vấn"
-                  value={params.fullName}
-                  onChange={event =>
-                    setParams({
-                      ...params,
-                      fullName: event.target.value,
-                    })
-                  }
-                />
-              </Form.Group>
-              <Form.Group
-                className="d-flex align-items-center mr-3"
-                controlId="formEmail"
-              >
-                <span className="mr-2 font-w500">Email:</span>
-                <Form.Control
-                  type="text"
-                  placeholder="Nhập truy vấn"
-                  value={params.email}
-                  onChange={event =>
-                    setParams({
-                      ...params,
-                      email: event.target.value,
-                    })
-                  }
-                />
-              </Form.Group>
-              <Form.Group className="mr-3">
-                <Button
-                  type="submit"
-                  className="d-flex align-items-center btn-alt-primary"
+                <Form.Group
+                  className="d-flex align-items-center mr-3"
+                  controlId="formFullName"
                 >
-                  <i className="fa fa-fw fa-search mr-1" />
-                  Tìm kiếm
-                </Button>
-              </Form.Group>
-              <Form.Group>
-                <Button
-                  type="submit"
-                  className="d-flex align-items-center btn-alt-success"
+                  <span className="mr-2 font-w500">Họ và tên:</span>
+                  <Form.Control
+                    type="text"
+                    placeholder="Nhập truy vấn"
+                    value={params.fullName}
+                    onChange={event =>
+                      setParams({
+                        ...params,
+                        fullName: event.target.value,
+                      })
+                    }
+                  />
+                </Form.Group>
+                <Form.Group
+                  className="d-flex align-items-center mr-3"
+                  controlId="formEmail"
                 >
-                  <i className="fa fa-fw fa-plus mr-1" />
-                  Thêm
-                </Button>
-              </Form.Group>
+                  <span className="mr-2 font-w500">Email:</span>
+                  <Form.Control
+                    type="text"
+                    placeholder="Nhập truy vấn"
+                    value={params.email}
+                    onChange={event =>
+                      setParams({
+                        ...params,
+                        email: event.target.value,
+                      })
+                    }
+                  />
+                </Form.Group>
+                <Form.Group className="mr-3">
+                  <Button
+                    type="submit"
+                    className="d-flex align-items-center btn-alt-primary"
+                  >
+                    <i className="fa fa-fw fa-search mr-1" />
+                    Tìm kiếm
+                  </Button>
+                </Form.Group>
+              </Form>
+              <AddUser doSubmit={addRecord} {...{ orgList }} />
             </div>
-          </Form>
+          </div>
           <Table hover>
             <thead className="thead-light">
               <tr>
@@ -196,36 +287,38 @@ export const Users = () => {
                   <td className="text-center font-size-sm">{item.email}</td>
                   <td className="text-center font-size-sm">{item.phone}</td>
                   <td className="text-center font-size-sm">
-                    {item.organization.fullName}
+                    {item.organization?.fullName}
                   </td>
                   <td className="text-center font-size-sm font-w600">
                     {item.position && (
-                      <span
-                        className={`px-2 py-1 rounded ${
-                          item.isAdmin
-                            ? 'bg-success-light text-success'
-                            : 'bg-info-light text-info'
-                        }`}
-                      >
+                      <span className="px-2 py-1 rounded bg-info-light text-info">
                         {item.position}
+                      </span>
+                    )}
+                    {item.isAdmin && (
+                      <span className="ml-1 px-2 py-1 rounded bg-success-light text-success">
+                        Quản trị viên
                       </span>
                     )}
                   </td>
                   <td className="text-center font-size-sm">
                     <ButtonGroup>
-                      <Button className="btn-sm btn-alt-light">
-                        <i className="fa fa-fw fa-pencil-alt" />
-                      </Button>
-                      <Button className="btn-sm btn-alt-light">
-                        <i className="fa fa-fw fa-times" />
-                      </Button>
+                      <EditUser
+                        doSubmit={editRecord}
+                        initialData={item}
+                        {...{ orgList }}
+                      />
+                      <DeleteRecord
+                        doSubmit={deleteRecord}
+                        recordId={item.id}
+                      />
                     </ButtonGroup>
                   </td>
                 </tr>
               ))}
             </tbody>
           </Table>
-          <div className="paging d-flex align-items-center justify-content-between">
+          <div className="d-flex align-items-center justify-content-between">
             <span className="page-index mb-3">
               <strong>
                 {params.page * params.size + 1} -{' '}
@@ -233,41 +326,12 @@ export const Users = () => {
               </strong>{' '}
               trong số <strong>{recordCount}</strong> bản ghi
             </span>
-            <Pagination>
-              <Pagination.First
-                disabled={!params.page}
-                onClick={() => setParams({ ...params, page: 0 })}
-              >
-                <i className="fa fa-angle-double-left" />
-              </Pagination.First>
-              <Pagination.Prev
-                disabled={!params.page}
-                onClick={() => setParams({ ...params, page: params.page - 1 })}
-              >
-                <i className="fa fa-angle-left" />
-              </Pagination.Prev>
-              {[...Array(pageCount).keys()].map(item => (
-                <Pagination.Item
-                  key={item}
-                  active={item === params.page}
-                  onClick={() => setParams({ ...params, page: item })}
-                >
-                  {item + 1}
-                </Pagination.Item>
-              ))}
-              <Pagination.Next
-                disabled={params.page === pageCount - 1}
-                onClick={() => setParams({ ...params, page: params.page + 1 })}
-              >
-                <i className="fa fa-angle-right" />
-              </Pagination.Next>
-              <Pagination.Last
-                disabled={params.page === pageCount - 1}
-                onClick={() => setParams({ ...params, page: pageCount - 1 })}
-              >
-                <i className="fa fa-angle-double-right" />
-              </Pagination.Last>
-            </Pagination>
+            <Paging
+              page={params.page}
+              pageSize={params.size}
+              setPage={value => setParams({ ...params, page: value })}
+              {...{ pageCount, recordCount }}
+            />
           </div>
         </div>
       </div>

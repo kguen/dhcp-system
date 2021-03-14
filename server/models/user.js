@@ -32,8 +32,10 @@ module.exports = (sequelize, DataTypes) => {
       organizationId: DataTypes.INTEGER,
       position: DataTypes.STRING,
       phone: {
-        is: phoneRegex,
         type: DataTypes.STRING,
+        validate: {
+          is: phoneRegex,
+        },
       },
       email: {
         type: DataTypes.STRING,

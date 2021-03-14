@@ -41,7 +41,7 @@ export const Login = () => {
         history.push(data.user.isAdmin ? '/orgs' : '/profile');
       })
       .catch(err => {
-        if (err.response.status === 401) {
+        if (err.response?.status === 401) {
           setUser({
             ...user,
             data: null,
@@ -50,6 +50,11 @@ export const Login = () => {
           setAlert({
             type: ALERT_TYPE.error,
             message: 'Tên đăng nhập hoặc mật khẩu không hợp lệ!',
+          });
+        } else {
+          setAlert({
+            type: ALERT_TYPE.error,
+            message: 'Đã xảy ra lỗi hệ thống!',
           });
         }
       });

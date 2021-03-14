@@ -6,17 +6,17 @@ import {
   Redirect,
 } from 'react-router-dom';
 import { Alert } from 'react-bootstrap';
-import { Header } from './components/Header';
-import { Login } from './components/Login';
-import { PrivateRoute } from './components/PrivateRoute';
-import { Organizations } from './components/Organizations';
-import { Users } from './components/Users';
-import { Addresses } from './components/Addresses';
-import { Profile } from './components/Profile';
-import { UserContext, AlertContext } from './contexts';
-import { dhcpApi, tokenConfig } from './utils';
-import { ALERT_TYPE } from './constants';
-import './App.scss';
+import { Header } from '../Header';
+import { Login } from '../Login';
+import { PrivateRoute } from '../PrivateRoute';
+import { Organizations } from '../Organizations';
+import { Users } from '../Users';
+import { Addresses } from '../Addresses';
+import { Profile } from '../Profile';
+import { UserContext, AlertContext } from '../../contexts';
+import { dhcpApi, tokenConfig } from '../../utils';
+import { ALERT_TYPE } from '../../constants';
+import './styles.scss';
 
 export const App = () => {
   const [user, setUser] = useState({

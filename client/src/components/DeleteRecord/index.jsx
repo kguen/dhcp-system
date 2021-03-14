@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 
-export const DeleteOrg = ({ doSubmit, recordId }) => {
+export const DeleteRecord = ({ doSubmit, recordId }) => {
   const [modal, setModal] = useState(false);
 
   const showModal = () => setModal(true);
