@@ -151,6 +151,7 @@ export const OrgInfo = () => {
         >
           <Form.Control
             as="select"
+            className="custom-select"
             value={params.size}
             onChange={handlePageSizeChange}
           >

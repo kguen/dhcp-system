@@ -156,7 +156,7 @@ export const Users = () => {
     setRefetch(!refetch);
   };
 
-  const handleEntryCountChange = event => {
+  const handlePageSizeChange = event => {
     setParams({ ...params, page: 0, size: +event.target.value });
     setRefetch(!refetch);
   };
@@ -180,12 +180,13 @@ export const Users = () => {
           <div className="d-flex align-items-center justify-content-between">
             <Form.Group
               className="d-flex align-items-center"
-              controlId="formEntryCount"
+              controlId="formPageSize"
             >
               <Form.Control
                 as="select"
+                className="custom-select"
                 value={params.size}
-                onChange={handleEntryCountChange}
+                onChange={handlePageSizeChange}
               >
                 {PAGE_SIZES.map(item => (
                   <option key={item}>{item}</option>
@@ -201,6 +202,7 @@ export const Users = () => {
                 <span className="mr-2 font-w500">Đơn vị:</span>
                 <Form.Control
                   as="select"
+                  className="custom-select"
                   value={params.organizationId}
                   onChange={handleOrgIdChange}
                 >

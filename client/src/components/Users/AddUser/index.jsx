@@ -179,6 +179,7 @@ export const AddUser = ({ doSubmit, orgList }) => {
                   <Form.Label>Đơn vị</Form.Label>
                   <Form.Control
                     as="select"
+                    className="custom-select"
                     name="organizationId"
                     ref={register({
                       valueAsNumber: true,
@@ -192,9 +193,13 @@ export const AddUser = ({ doSubmit, orgList }) => {
                     ))}
                   </Form.Control>
                 </Form.Group>
-                <Form.Group className="pl-2 mb-2" controlId="formIsAdmin">
+                <Form.Group
+                  className="pl-2 d-flex align-items-center mb-0"
+                  controlId="formIsAdmin"
+                >
                   <Form.Check
-                    type="checkbox"
+                    type="switch"
+                    className="custom-control-lg pb-2"
                     name="isAdmin"
                     label="Là quản trị viên"
                     ref={register}
