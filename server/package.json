@@ -1,17 +1,19 @@
 {
   "name": "dhcp-api",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=9.0.0"
+  },
   "main": "index.js",
   "scripts": {
     "start": "node -r dotenv/config index.js",
-    "dev": "nodemon -r dotenv/config index.js",
+    "dev": "nodemon -r dotenv/config --ignore seeders/ --ignore migrations/ --ignore scripts/ index.js",
     "ldap-seed": "node -r dotenv/config scripts/seedLDAP.js",
     "ldap-purge": "node -r dotenv/config scripts/purgeLDAP.js",
     "db-setup": "npx sequelize db:migrate && npx sequelize db:seed:all && yarn run ldap-seed",
-    "db-purge": "npx sequelize db:migrate:undo:all && yarn run ldap-purge",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "db-purge": "npx sequelize db:migrate:undo:all && yarn run ldap-purge"
   },
-  "author": "",
+  "author": "kguen",
   "license": "ISC",
   "devDependencies": {
     "eslint": "^7.2.0",
@@ -29,10 +31,12 @@
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "is-cidr": "^4.0.2",
     "jsonwebtoken": "^8.5.1",
     "ldapjs": "^2.2.4",
     "morgan": "^1.10.0",
     "mysql2": "^2.2.5",
+    "netmask": "^1.0.6",
     "sequelize": "^6.5.0"
   }
 }

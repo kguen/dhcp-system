@@ -26,7 +26,7 @@ const index = (req, res) => {
 };
 
 const list = (req, res) => {
-  Organization.findAll({ attributes: ['id', 'fullName'] })
+  Organization.findAll({ attributes: ['id', 'abbreviation', 'fullName'] })
     .then(data => {
       res.status(200).send(data);
     })

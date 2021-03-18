@@ -3,6 +3,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 const usersRoute = require('./routes/users');
 const orgsRoute = require('./routes/organizations');
+const subnetRoute = require('./routes/subnet');
 const authRoute = require('./routes/auth');
 
 const app = express();
@@ -11,6 +12,7 @@ const port = process.env.PORT || 3030;
 
 router.use('/users', usersRoute);
 router.use('/orgs', orgsRoute);
+router.use('/subnets', subnetRoute);
 router.use('/auth', authRoute);
 
 app.use(morgan('dev'));

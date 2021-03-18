@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
         as: 'users',
         foreignKey: 'organizationId',
       });
+      Organization.hasOne(models.Subnet, {
+        as: 'subnets',
+        foreignKey: 'organizationId',
+      });
     }
   }
   Organization.init(
@@ -36,7 +40,6 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
       address: DataTypes.STRING,
-      note: DataTypes.TEXT,
     },
     {
       sequelize,

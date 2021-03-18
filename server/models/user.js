@@ -44,7 +44,6 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
       isAdmin: DataTypes.BOOLEAN,
-      note: DataTypes.TEXT,
     },
     {
       sequelize,

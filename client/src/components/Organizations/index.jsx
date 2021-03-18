@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { SITE_TITLE } from '../../constants';
 import { OrgInfo } from './OrgInfo';
+import { SubnetInfo } from './SubnetInfo';
 import './styles.scss';
 
 export const Organizations = () => {
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState(1);
 
   return (
     <div className="orgs-container content-container">
@@ -40,7 +41,7 @@ export const Organizations = () => {
           </li>
         </ul>
         {tab === 0 && <OrgInfo />}
-        {tab === 1 && <OrgInfo />}
+        {tab === 1 && <SubnetInfo />}
       </div>
     </div>
   );

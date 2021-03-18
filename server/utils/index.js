@@ -1,3 +1,5 @@
+const { Netmask, ip2long, long2ip } = require('netmask');
+
 const getPagination = (page, size) => {
   const limit = size ? +size : 5;
   const offset = page ? page * limit : 0;
@@ -11,4 +13,15 @@ const getPagingData = (data, page, limit) => {
   return { recordCount, records, pageCount, currentPage };
 };
 
-module.exports = { getPagination, getPagingData };
+const getSubnetData = address => {
+  const block = new Netmask(address);
+  return {
+    subnet: address,
+    mask: block.mask,
+    firstIP: long2ip(ip2long(block.first) + 1),
+    lastIP: block.last,
+    gateway: block.first,
+  };
+};
+
+module.exports = { getPagination, getPagingData, getSubnetData };

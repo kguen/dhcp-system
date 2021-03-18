@@ -10,7 +10,7 @@ export const DeleteRecord = ({ doSubmit, recordId }) => {
   return (
     <>
       <Button className="btn-sm btn-alt-light" onClick={showModal}>
-        <i className="fa fa-fw fa-times" />
+        <i className="fa fa-fw fa-trash-alt" />
       </Button>
       <Modal
         show={modal}

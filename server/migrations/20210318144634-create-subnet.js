@@ -1,39 +1,36 @@
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Users', {
+    await queryInterface.createTable('Subnets', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      username: {
+      organizationId: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+      },
+      vlan: {
         allowNull: false,
         unique: true,
         type: Sequelize.STRING,
       },
-      fullName: {
+      subnet: {
         allowNull: false,
         type: Sequelize.STRING,
       },
-      organizationId: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'Organizations',
-          key: 'id',
-        },
-      },
-      position: {
+      mask: {
         type: Sequelize.STRING,
       },
-      email: {
+      firstIP: {
         type: Sequelize.STRING,
       },
-      phone: {
+      lastIP: {
         type: Sequelize.STRING,
       },
-      isAdmin: {
-        type: Sequelize.BOOLEAN,
+      gateway: {
+        type: Sequelize.STRING,
       },
       createdAt: {
         allowNull: false,
@@ -46,6 +43,6 @@ module.exports = {
     });
   },
   down: async queryInterface => {
-    await queryInterface.dropTable('Users');
+    await queryInterface.dropTable('Subnets');
   },
 };
