@@ -1,4 +1,5 @@
 const { Netmask, ip2long, long2ip } = require('netmask');
+const { Subnet, Device, User } = require('../models');
 
 const getPagination = (page, size) => {
   const limit = size ? +size : 5;
@@ -24,4 +25,41 @@ const getSubnetData = address => {
   };
 };
 
-module.exports = { getPagination, getPagingData, getSubnetData };
+const getNewIpFromUserId = async userId => {
+  const organizationId = (await User.findByPk(userId))?.organizationId;
+  if (!organizationId) {
+    return null;
+  }
+  const usedIPs = (
+    await Device.findAll({
+      attributes: ['ipAddress'],
+      include: [
+        {
+          model: User,
+          as: 'user',
+          where: { organizationId },
+        },
+      ],
+    })
+  ).map(({ ipAddress }) => ip2long(ipAddress));
+  const { firstIP, lastIP } = await Subnet.findOne({
+    where: { organizationId },
+  });
+  // get next free IP address in subnet
+  const longFirstIP = ip2long(firstIP);
+  const longLastIP = ip2long(lastIP);
+  for (let ip = longFirstIP; ip <= longLastIP; ip += 1) {
+    if (!usedIPs.includes(ip)) {
+      return long2ip(ip);
+    }
+  }
+  // if no address found -> return null
+  return null;
+};
+
+module.exports = {
+  getPagination,
+  getPagingData,
+  getSubnetData,
+  getNewIpFromUserId,
+};

@@ -10,10 +10,10 @@ const index = (req, res) => {
   const { page, size, vlan, fullName } = req.query;
   const { limit, offset } = getPagination(page, size);
   const condition = {};
-  const relCondition = {};
+  const orgCondition = {};
 
   if (vlan) condition.vlan = { [Op.like]: `%${vlan}%` };
-  if (fullName) relCondition.fullName = { [Op.like]: `%${fullName}%` };
+  if (fullName) orgCondition.fullName = { [Op.like]: `%${fullName}%` };
 
   Subnet.findAndCountAll({
     limit,
@@ -24,7 +24,7 @@ const index = (req, res) => {
         model: Organization,
         as: 'organization',
         attributes: ['id', 'fullName'],
-        where: relCondition,
+        where: orgCondition,
       },
     ],
   })
@@ -54,7 +54,7 @@ const create = (req, res) => {
   Subnet.create(subnet)
     .then(result => {
       res.status(201).json({
-        message: 'Created organization successfully!',
+        message: 'Created subnet successfully!',
         result,
       });
     })

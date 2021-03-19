@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
         as: 'organization',
         foreignKey: 'organizationId',
       });
+      User.hasMany(models.Device, {
+        as: 'devices',
+        foreignKey: 'userId',
+      });
     }
   }
   User.init(
