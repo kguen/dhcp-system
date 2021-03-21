@@ -94,9 +94,9 @@ export const Header = () => {
             <li className="nav-item">
               <Link
                 className={`nav-link d-flex align-items-center justify-content-center ${
-                  location.pathname.includes('addresses') ? 'my-active' : ''
+                  location.pathname.includes('devices') ? 'my-active' : ''
                 }`}
-                to="/addresses"
+                to="/devices"
               >
                 <i className="fa fa-fw fa-network-wired mr-2" /> Bản đồ IP
               </Link>

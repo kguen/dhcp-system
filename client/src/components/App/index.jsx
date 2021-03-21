@@ -11,7 +11,7 @@ import { Login } from '../Login';
 import { PrivateRoute } from '../PrivateRoute';
 import { Organizations } from '../Organizations';
 import { Users } from '../Users';
-import { Addresses } from '../Addresses';
+import { Devices } from '../Devices';
 import { Profile } from '../Profile';
 import { UserContext, AlertContext } from '../../contexts';
 import { dhcpApi, tokenConfig } from '../../utils';
@@ -108,8 +108,8 @@ export const App = () => {
                 />
                 <PrivateRoute
                   exact
-                  path="/addresses"
-                  component={Addresses}
+                  path="/devices"
+                  component={Devices}
                   adminRoute
                 />
                 <PrivateRoute exact path="/profile" component={Profile} />

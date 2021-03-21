@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'organizationId',
       });
       Organization.hasOne(models.Subnet, {
-        as: 'subnets',
+        as: 'subnet',
         foreignKey: 'organizationId',
       });
     }

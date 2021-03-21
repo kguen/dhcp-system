@@ -2,8 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { unstable_batchedUpdates } from 'react-dom';
 import { Helmet } from 'react-helmet';
 import { Form, Table, Button, ButtonGroup } from 'react-bootstrap';
-import { AddUser } from './AddUser';
-import { EditUser } from './EditUser';
+import { AddDevice } from './AddDevice';
+import { EditDevice } from './EditDevice';
 import { DeleteRecord } from '../DeleteRecord';
 import { Paging } from '../Paging';
 import { UserContext, AlertContext } from '../../contexts';
@@ -11,26 +11,28 @@ import { dhcpApi, tokenConfig } from '../../utils';
 import { ALERT_TYPE, SITE_TITLE, PAGE_SIZES } from '../../constants';
 import './styles.scss';
 
-export const Users = () => {
+export const Devices = () => {
   const [records, setRecords] = useState([]);
   const [pageCount, setPageCount] = useState(0);
   const [recordCount, setRecordCount] = useState(0);
   const [refetch, setRefetch] = useState(true);
   const [toLastPage, setToLastPage] = useState(false);
   const [orgList, setOrgList] = useState([]);
+  const [userList, setUserList] = useState([]);
   const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const [params, setParams] = useState({
     page: 0,
     size: PAGE_SIZES[1],
-    email: '',
-    fullName: '',
+    enabled: true,
+    type: '',
+    userId: 0,
     organizationId: 0,
   });
 
   const fetchData = () =>
     dhcpApi
-      .get('/users', { ...tokenConfig(user), params })
+      .get('/devices', { ...tokenConfig(user), params })
       .then(({ data }) =>
         unstable_batchedUpdates(() => {
           setRecords(data.records);
@@ -52,8 +54,19 @@ export const Users = () => {
 
   const fetchOrgList = () =>
     dhcpApi
-      .get('/orgs/list', tokenConfig(user))
+      .get('/orgs/list', { ...tokenConfig(user), params: { hasSubnet: true } })
       .then(({ data }) => setOrgList(data))
+      .catch(() =>
+        setAlert({
+          message: 'Đã xảy ra lỗi máy chủ!',
+          type: ALERT_TYPE.error,
+        })
+      );
+
+  const fetchUserList = () =>
+    dhcpApi
+      .get('/users/list', tokenConfig(user))
+      .then(({ data }) => setUserList(data))
       .catch(() =>
         setAlert({
           message: 'Đã xảy ra lỗi máy chủ!',
@@ -63,14 +76,15 @@ export const Users = () => {
 
   const addRecord = data =>
     dhcpApi
-      .post('/users', data, tokenConfig(user))
+      .post('/devices', data, tokenConfig(user))
       .then(() => {
         unstable_batchedUpdates(() => {
           setParams({
             ...params,
             page: 0,
-            email: '',
-            fullName: '',
+            enabled: true,
+            type: '',
+            userId: 0,
             organizationId: 0,
           });
           setRefetch(!refetch);
@@ -82,10 +96,12 @@ export const Users = () => {
         });
       })
       .catch(err => {
-        if (
+        if (err.response.data.type === 'AddressError') {
+          throw new Error('AddressError');
+        } else if (
           err.response?.data?.errors?.name === 'SequelizeUniqueConstraintError'
         ) {
-          throw new Error();
+          throw new Error('SequelizeUniqueConstraintError');
         } else {
           setAlert({
             message: 'Đã xảy ra lỗi máy chủ!',
@@ -96,7 +112,7 @@ export const Users = () => {
 
   const editRecord = (data, id) =>
     dhcpApi
-      .patch(`/users/${id}`, data, tokenConfig(user))
+      .patch(`/devices/${id}`, data, tokenConfig(user))
       .then(({ data: { result } }) => {
         setRecords(records.map(item => (item.id === id ? result : item)));
         setAlert({
@@ -105,10 +121,12 @@ export const Users = () => {
         });
       })
       .catch(err => {
-        if (
+        if (err.response.data.type === 'AddressError') {
+          throw new Error('AddressError');
+        } else if (
           err.response?.data?.errors?.name === 'SequelizeUniqueConstraintError'
         ) {
-          throw new Error();
+          throw new Error('SequelizeUniqueConstraintError');
         } else {
           setAlert({
             message: 'Đã xảy ra lỗi máy chủ!',
@@ -119,7 +137,7 @@ export const Users = () => {
 
   const deleteRecord = id =>
     dhcpApi
-      .delete(`/users/${id}`, tokenConfig(user))
+      .delete(`/devices/${id}`, tokenConfig(user))
       .then(() => {
         unstable_batchedUpdates(() => {
           if (records.length > 1) {
@@ -131,8 +149,9 @@ export const Users = () => {
             setParams({
               ...params,
               page: 0,
-              email: '',
-              fullName: '',
+              enabled: true,
+              type: '',
+              userId: 0,
               organizationId: 0,
             });
             setRefetch(!refetch);
@@ -166,15 +185,26 @@ export const Users = () => {
     setRefetch(!refetch);
   };
 
+  const handleUserIdChange = event => {
+    setParams({ ...params, page: 0, userId: +event.target.value });
+    setRefetch(!refetch);
+  };
+
+  const handleEnabledChange = event => {
+    setParams({ ...params, page: 0, enabled: event.target.checked });
+    setRefetch(!refetch);
+  };
+
   useEffect(() => fetchOrgList(), []);
+  useEffect(() => fetchUserList(), []);
   useEffect(() => fetchData(), [params.page, refetch, toLastPage]);
 
   return (
-    <div className="content-container users-container">
+    <div className="content-container devices-container">
       <Helmet>
-        <title>Người dùng | {SITE_TITLE}</title>
+        <title>Bản đồ IP | {SITE_TITLE}</title>
       </Helmet>
-      <h3 className="text-center">Quản lý người dùng</h3>
+      <h3 className="text-center">Quản lý địa chỉ IP/MAC</h3>
       <div className="block block-rounded">
         <div className="block-content">
           <div className="d-flex align-items-center justify-content-between">
@@ -196,10 +226,9 @@ export const Users = () => {
             </Form.Group>
             <div className="d-flex justify-content-end align-items-center header-right">
               <Form.Group
-                className="d-flex align-items-center mr-3 form-org-id"
-                controlId="formOrgId"
+                className="d-flex align-items-center mr-3 form-select"
+                controlId="formSearchOrgId"
               >
-                <span className="mr-2 font-w500">Đơn vị:</span>
                 <Form.Control
                   as="select"
                   className="custom-select"
@@ -214,40 +243,61 @@ export const Users = () => {
                   ))}
                 </Form.Control>
               </Form.Group>
+              <Form.Group
+                className="d-flex align-items-center mr-3 form-select"
+                controlId="formSearchUserId"
+              >
+                <Form.Control
+                  as="select"
+                  className="custom-select"
+                  value={params.userId}
+                  onChange={handleUserIdChange}
+                >
+                  <option value="0">Tất cả người dùng</option>
+                  {userList
+                    .filter(
+                      item =>
+                        !params.organizationId ||
+                        item.organizationId === params.organizationId
+                    )
+                    .map(item => (
+                      <option key={item.id} value={item.id}>
+                        {item.fullName}
+                      </option>
+                    ))}
+                </Form.Control>
+              </Form.Group>
+              <Form.Group
+                className="d-flex align-items-center mr-3 mb-0"
+                controlId="formSearchEnabled"
+              >
+                <Form.Check
+                  type="switch"
+                  className={`custom-control-lg pb-4 ${
+                    params.enabled ? 'custom-control-success' : ''
+                  }`}
+                  name="enabled"
+                  label="Đang hoạt động"
+                  checked={params.enabled}
+                  onChange={handleEnabledChange}
+                />
+              </Form.Group>
               <Form
                 className="d-flex align-items-center"
                 onSubmit={handleFilter}
               >
                 <Form.Group
                   className="d-flex align-items-center mr-3"
-                  controlId="formFullName"
+                  controlId="formSearchType"
                 >
-                  <span className="mr-2 font-w500">Họ và tên:</span>
                   <Form.Control
                     type="text"
-                    placeholder="Nhập truy vấn"
-                    value={params.fullName}
+                    placeholder="Nhập loại thiết bị"
+                    value={params.type}
                     onChange={event =>
                       setParams({
                         ...params,
-                        fullName: event.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-                <Form.Group
-                  className="d-flex align-items-center mr-3"
-                  controlId="formEmail"
-                >
-                  <span className="mr-2 font-w500">Email:</span>
-                  <Form.Control
-                    type="text"
-                    placeholder="Nhập truy vấn"
-                    value={params.email}
-                    onChange={event =>
-                      setParams({
-                        ...params,
-                        email: event.target.value,
+                        type: event.target.value,
                       })
                     }
                   />
@@ -262,18 +312,19 @@ export const Users = () => {
                   </Button>
                 </Form.Group>
               </Form>
-              <AddUser doSubmit={addRecord} {...{ orgList }} />
+              <AddDevice doSubmit={addRecord} {...{ orgList, userList }} />
             </div>
           </div>
           <Table hover>
             <thead className="thead-light">
               <tr>
                 <th className="text-center">#</th>
-                <th className="text-center">Họ và tên</th>
-                <th className="text-center">Email</th>
-                <th className="text-center">Điện thoại</th>
                 <th className="text-center">Đơn vị</th>
-                <th className="text-center">Chức vụ</th>
+                <th className="text-center">Người dùng</th>
+                <th className="text-center">Loại thiết bị</th>
+                <th className="text-center">Địa chỉ MAC</th>
+                <th className="text-center">Địa chỉ IP</th>
+                <th className="text-center">Trạng thái</th>
                 <th className="text-center">Thao tác</th>
               </tr>
             </thead>
@@ -284,31 +335,33 @@ export const Users = () => {
                     {params.page * params.size + index + 1}
                   </td>
                   <td className="text-center font-w600 font-size-sm">
-                    {item.fullName}
+                    {item.user.organization?.fullName}
                   </td>
-                  <td className="text-center font-size-sm">{item.email}</td>
-                  <td className="text-center font-size-sm">{item.phone}</td>
+                  <td className="text-center font-w600 font-size-sm">
+                    {item.user.fullName}
+                  </td>
+                  <td className="text-center font-size-sm">{item.type}</td>
                   <td className="text-center font-size-sm">
-                    {item.organization?.fullName}
+                    {item.macAddress}
                   </td>
+                  <td className="text-center font-size-sm">{item.ipAddress}</td>
                   <td className="text-center font-size-sm font-w600">
-                    {item.position && (
-                      <span className="px-2 py-1 rounded bg-info-light text-info">
-                        {item.position}
-                      </span>
-                    )}
-                    {item.isAdmin && (
+                    {item.enabled ? (
                       <span className="ml-1 px-2 py-1 rounded bg-success-light text-success">
-                        Quản trị viên
+                        Đang hoạt động
+                      </span>
+                    ) : (
+                      <span className="px-2 py-1 rounded bg-danger-light text-danger">
+                        Đã tắt
                       </span>
                     )}
                   </td>
                   <td className="text-center font-size-sm">
                     <ButtonGroup>
-                      <EditUser
+                      <EditDevice
                         doSubmit={editRecord}
                         initialData={item}
-                        {...{ orgList }}
+                        {...{ orgList, userList }}
                       />
                       <DeleteRecord
                         doSubmit={deleteRecord}

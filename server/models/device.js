@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
       ipAddress: DataTypes.STRING,
       enabled: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false,
+        defaultValue: true,
       },
     },
     {

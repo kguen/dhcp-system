@@ -5,6 +5,7 @@ const { getPagination, getPagingData } = require('../utils');
 const {
   User,
   Organization,
+  Subnet,
   sequelize,
   Sequelize: { Op },
 } = require('../models');
@@ -32,6 +33,38 @@ const index = (req, res) => {
     .then(data => {
       const response = getPagingData(data, page, limit);
       res.status(200).send(response);
+    })
+    .catch(errors => {
+      res.status(500).json({
+        message: 'Something went wrong!',
+        errors,
+      });
+    });
+};
+
+const list = (req, res) => {
+  User.findAll({
+    attributes: ['id', 'organizationId', 'fullName'],
+    order: [['fullName', 'ASC']],
+    include: [
+      {
+        model: Organization,
+        as: 'organization',
+        attributes: ['id'],
+        where: { id: { [Op.ne]: null } },
+        include: [
+          {
+            model: Subnet,
+            as: 'subnet',
+            attributes: ['id'],
+            where: { id: { [Op.ne]: null } },
+          },
+        ],
+      },
+    ],
+  })
+    .then(data => {
+      res.status(200).send(data);
     })
     .catch(errors => {
       res.status(500).json({
@@ -267,6 +300,7 @@ const destroy = (req, res) => {
 
 module.exports = {
   index,
+  list,
   create,
   update,
   destroy,

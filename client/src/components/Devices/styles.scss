@@ -1,0 +1,14 @@
+.devices-container {
+  .block-content .header-right {
+    width: 82%;
+
+    .form-select {
+      width: 25%;
+    }
+
+    #formSearchOrgId,
+    #formSearchUserId {
+      height: 2.25rem;
+    }
+  }
+}

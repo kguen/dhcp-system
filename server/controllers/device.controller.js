@@ -115,6 +115,7 @@ const update = async (req, res) => {
     userId,
     macAddress: req.body?.macAddress,
     type: req.body?.type,
+    enabled: req.body?.enabled,
   };
   if (ipAddress) deviceToUpdate.ipAddress = ipAddress;
 

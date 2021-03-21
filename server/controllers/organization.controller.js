@@ -1,6 +1,7 @@
 const { getPagination, getPagingData } = require('../utils');
 const {
   Organization,
+  Subnet,
   Sequelize: { Op },
 } = require('../models');
 
@@ -26,7 +27,20 @@ const index = (req, res) => {
 };
 
 const list = (req, res) => {
-  Organization.findAll({ attributes: ['id', 'abbreviation', 'fullName'] })
+  Organization.findAll({
+    attributes: ['id', 'abbreviation', 'fullName'],
+    ...(req.query?.hasSubnet === 'true' && {
+      where: { id: { [Op.ne]: null } },
+      include: [
+        {
+          model: Subnet,
+          as: 'subnet',
+          attributes: ['id'],
+          where: { id: { [Op.ne]: null } },
+        },
+      ],
+    }),
+  })
     .then(data => {
       res.status(200).send(data);
     })
