@@ -1,7 +1,12 @@
 const express = require('express');
-const { isAuthenticated, isAdmin } = require('../middlewares');
+const {
+  isAuthenticated,
+  isAdmin,
+  isOwnedDeviceOrAdmin,
+} = require('../middlewares');
 const {
   index,
+  indexForUser,
   create,
   update,
   destroy,
@@ -10,11 +15,18 @@ const {
 const router = express.Router();
 
 router.use(isAuthenticated);
+
+// Authenticated routes
+router.get('/user', indexForUser);
+router.post('/', create);
+
+// Device owner routes
+router.patch('/:id', isOwnedDeviceOrAdmin, update);
+router.delete('/:id', isOwnedDeviceOrAdmin, destroy);
+
 router.use(isAdmin);
 
+// Admin routes
 router.get('/', index);
-router.post('/', create);
-router.patch('/:id', update);
-router.delete('/:id', destroy);
 
 module.exports = router;

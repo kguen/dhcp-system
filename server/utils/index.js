@@ -42,12 +42,15 @@ const getNewIpFromUserId = async userId => {
       ],
     })
   ).map(({ ipAddress }) => ip2long(ipAddress));
-  const { firstIP, lastIP } = await Subnet.findOne({
+  const subnet = await Subnet.findOne({
     where: { organizationId },
   });
+  if (!subnet) {
+    return null;
+  }
   // get next free IP address in subnet
-  const longFirstIP = ip2long(firstIP);
-  const longLastIP = ip2long(lastIP);
+  const longFirstIP = ip2long(subnet.firstIP);
+  const longLastIP = ip2long(subnet.lastIP);
   for (let ip = longFirstIP; ip <= longLastIP; ip += 1) {
     if (!usedIPs.includes(ip)) {
       return long2ip(ip);

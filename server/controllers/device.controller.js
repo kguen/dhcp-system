@@ -25,6 +25,10 @@ const index = (req, res) => {
     limit,
     offset,
     where: condition,
+    order: [
+      ['user', 'organization', 'fullName', 'ASC'],
+      ['user', 'fullName', 'ASC'],
+    ],
     include: [
       {
         model: User,
@@ -53,16 +57,55 @@ const index = (req, res) => {
     });
 };
 
+const indexForUser = (req, res) => {
+  const { page, size, type, enabled } = req.query;
+  const { limit, offset } = getPagination(page, size);
+  const condition = {};
+
+  if (type) condition.type = { [Op.like]: `%${type}%` };
+  if (enabled) condition.enabled = enabled === 'true';
+
+  Device.findAndCountAll({
+    limit,
+    offset,
+    where: condition,
+    order: [['type', 'ASC']],
+    include: [
+      {
+        model: User,
+        as: 'user',
+        attributes: ['id'],
+        where: { id: req.user.id },
+      },
+    ],
+  })
+    .then(data => {
+      const response = getPagingData(data, page, limit);
+      res.status(200).send(response);
+    })
+    .catch(errors => {
+      res.status(500).json({
+        message: 'Something went wrong!',
+        errors,
+      });
+    });
+};
+
 const create = async (req, res) => {
-  const ipAddress = await getNewIpFromUserId(req.body?.userId);
+  const userId = req.user.isAdmin
+    ? req.body.userId || req.user.id
+    : req.user.id;
+  const ipAddress = await getNewIpFromUserId(userId);
+
   if (!ipAddress) {
     return res.status(500).json({
-      message: 'The subnet that this user belongs to has run out of addresses!',
+      message:
+        "The subnet that this user belongs to doesn't exists or has run out of addresses!",
       type: 'AddressError',
     });
   }
   const device = {
-    userId: req.body.userId,
+    userId,
     macAddress: req.body?.macAddress,
     type: req.body?.type,
     ipAddress,
@@ -85,34 +128,35 @@ const create = async (req, res) => {
 const update = async (req, res) => {
   const { id } = req.params;
   const userId = req.body?.userId;
-
-  // 1: check if device exists and get device info for 2
-  const thisDevice = await Device.findByPk(id, {
-    include: [{ model: User, as: 'user', attributes: ['organizationId'] }],
-  });
-  if (!thisDevice) {
-    return res.status(404).json({
-      message: 'Device not found!',
-    });
-  }
-  // 2: generate new IP address if organization has been changed
   let ipAddress;
-  if (
-    thisDevice.user.organizationId !==
-    (await User.findByPk(userId)).organizationId
-  ) {
-    ipAddress = await getNewIpFromUserId(req.body?.userId);
-    if (!ipAddress) {
-      return res.status(500).json({
-        message:
-          'The subnet that this user belongs to has run out of addresses!',
-        type: 'AddressError',
+
+  if (req.user.isAdmin && userId) {
+    // 1: check if device exists and get device info for 2
+    const thisDevice = await Device.findByPk(id, {
+      include: [{ model: User, as: 'user', attributes: ['organizationId'] }],
+    });
+    if (!thisDevice) {
+      return res.status(404).json({
+        message: 'Device not found!',
       });
     }
+    // 2: generate new IP address if organization has been changed
+    if (
+      thisDevice.user.organizationId !==
+      (await User.findByPk(userId)).organizationId
+    ) {
+      ipAddress = await getNewIpFromUserId(req.body?.userId);
+      if (!ipAddress) {
+        return res.status(500).json({
+          message:
+            "The subnet that this user belongs to doesn't exists or has run out of addresses!",
+          type: 'AddressError',
+        });
+      }
+    }
   }
-  // 3: create update object
   const deviceToUpdate = {
-    userId,
+    userId: req.user.isAdmin ? userId || req.user.id : req.user.id,
     macAddress: req.body?.macAddress,
     type: req.body?.type,
     enabled: req.body?.enabled,
@@ -175,6 +219,7 @@ const destroy = (req, res) => {
 
 module.exports = {
   index,
+  indexForUser,
   create,
   update,
   destroy,
