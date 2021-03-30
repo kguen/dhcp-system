@@ -6,10 +6,10 @@ import { SubnetInfo } from './SubnetInfo';
 import './styles.scss';
 
 export const Organizations = () => {
-  const [tab, setTab] = useState(1);
+  const [tab, setTab] = useState(0);
 
   return (
-    <div className="orgs-container content-container">
+    <div className="nav-container orgs-container content-container">
       <Helmet>
         <title>Đơn vị, Subnet | {SITE_TITLE}</title>
       </Helmet>
@@ -26,7 +26,7 @@ export const Organizations = () => {
               className={`nav-link ${tab === 0 ? 'active' : ''}`}
               onClick={() => setTab(0)}
             >
-              Thông tin cơ bản
+              Thông tin đơn vị
             </span>
           </li>
           <li className="nav-item">
