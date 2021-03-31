@@ -1,45 +1,47 @@
 const { Model } = require('sequelize');
-const { macRegex } = require('../constants');
 
 module.exports = (sequelize, DataTypes) => {
-  class Device extends Model {
+  class Avatar extends Model {
     static associate(models) {
-      Device.belongsTo(models.User, {
+      Avatar.belongsTo(models.User, {
         as: 'user',
         foreignKey: 'userId',
       });
     }
   }
-  Device.init(
+  Avatar.init(
     {
       userId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        validate: {
-          notNull: true,
-        },
-      },
-      macAddress: {
-        type: DataTypes.STRING,
-        allowNull: false,
         unique: true,
         validate: {
           notNull: true,
-          notEmpty: true,
-          is: macRegex,
         },
       },
-      type: DataTypes.STRING,
-      ipAddress: DataTypes.STRING,
-      enabled: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
+      type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notNull: true,
+          notEmpty: true,
+        },
       },
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notNull: true,
+          notEmpty: true,
+        },
+      },
+      data: DataTypes.BLOB('long'),
     },
     {
       sequelize,
-      modelName: 'Device',
+      indexes: [{ unique: true, fields: ['userId'] }],
+      modelName: 'Avatar',
     }
   );
-  return Device;
+  return Avatar;
 };

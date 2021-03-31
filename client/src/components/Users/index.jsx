@@ -9,6 +9,7 @@ import { Paging } from '../Paging';
 import { UserContext, AlertContext } from '../../contexts';
 import { dhcpApi, tokenConfig } from '../../utils';
 import { ALERT_TYPE, SITE_TITLE, PAGE_SIZES } from '../../constants';
+import DefaultAvatar from '../../assets/images/avatar.jpg';
 import './styles.scss';
 
 export const Users = () => {
@@ -269,6 +270,9 @@ export const Users = () => {
             <thead className="thead-light">
               <tr>
                 <th className="text-center">#</th>
+                <th className="text-center">
+                  <i className="si si-user" />
+                </th>
                 <th className="text-center">Họ và tên</th>
                 <th className="text-center">Email</th>
                 <th className="text-center">Điện thoại</th>
@@ -282,6 +286,19 @@ export const Users = () => {
                 <tr key={item.id}>
                   <td className="text-center font-w500 font-size-sm text-primary">
                     {params.page * params.size + index + 1}
+                  </td>
+                  <td className="text-center">
+                    <img
+                      className="rounded-circle"
+                      width="30"
+                      height="30"
+                      src={
+                        item?.avatar
+                          ? `data:${item.avatar.type};base64,${item.avatar.data}`
+                          : DefaultAvatar
+                      }
+                      alt="user avatar"
+                    />
                   </td>
                   <td className="text-center font-w600 font-size-sm">
                     {item.fullName}

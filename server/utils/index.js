@@ -60,9 +60,18 @@ const getNewIpFromUserId = async userId => {
   return null;
 };
 
+const userWithBase64Avatar = user => {
+  const thisUser = user;
+  if (user.avatar) {
+    thisUser.avatar.data = user.avatar.data.toString('base64');
+  }
+  return thisUser;
+};
+
 module.exports = {
   getPagination,
   getPagingData,
   getSubnetData,
   getNewIpFromUserId,
+  userWithBase64Avatar,
 };

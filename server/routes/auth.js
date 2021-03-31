@@ -1,6 +1,6 @@
 const express = require('express');
 const { login, me, update } = require('../controllers/auth.controller');
-const { isAuthenticated } = require('../middlewares');
+const { isAuthenticated, fileUploader } = require('../middlewares');
 
 const router = express.Router();
 
@@ -10,6 +10,6 @@ router.use(isAuthenticated);
 
 // Authenicated route
 router.get('/me', me);
-router.patch('/update', update);
+router.patch('/update', fileUploader.any(), update);
 
 module.exports = router;

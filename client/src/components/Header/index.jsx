@@ -3,7 +3,7 @@ import { Link, useLocation, useHistory } from 'react-router-dom';
 import { Dropdown } from 'react-bootstrap';
 import { AlertContext, UserContext } from '../../contexts';
 import Logo from '../../assets/images/logo.png';
-import Avatar from '../../assets/images/avatar.jpg';
+import DefaultAvatar from '../../assets/images/avatar.jpg';
 import { ALERT_TYPE } from '../../constants';
 import './styles.scss';
 
@@ -43,7 +43,11 @@ export const Header = () => {
         className="rounded-circle"
         width="21"
         height="21"
-        src={Avatar}
+        src={
+          user.data?.avatar
+            ? `data:${user.data.avatar.type};base64,${user.data.avatar.data}`
+            : DefaultAvatar
+        }
         alt="user avatar"
       />
       <span className="d-none d-sm-inline-block ml-2 font-w500">
@@ -111,7 +115,11 @@ export const Header = () => {
                 <div className="p-3 text-center rounded-top">
                   <img
                     className="img-avatar img-avatar-thumb"
-                    src={Avatar}
+                    src={
+                      user.data?.avatar
+                        ? `data:${user.data.avatar.type};base64,${user.data.avatar.data}`
+                        : DefaultAvatar
+                    }
                     alt="user avatar"
                   />
                   <h6 className="mt-2 mb-0 font-w500">{user.data?.fullName}</h6>

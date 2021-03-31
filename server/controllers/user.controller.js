@@ -1,11 +1,16 @@
 const ldapjs = require('ldapjs');
 const ldapConfig = require('../config/ldapConfig');
 const { passwordRegex } = require('../constants');
-const { getPagination, getPagingData } = require('../utils');
+const {
+  getPagination,
+  getPagingData,
+  userWithBase64Avatar,
+} = require('../utils');
 const {
   User,
   Organization,
   Subnet,
+  Avatar,
   sequelize,
   Sequelize: { Op },
 } = require('../models');
@@ -28,10 +33,18 @@ const index = (req, res) => {
         as: 'organization',
         attributes: ['id', 'fullName'],
       },
+      {
+        model: Avatar,
+        as: 'avatar',
+        attributes: ['type', 'data'],
+      },
     ],
   })
     .then(data => {
       const response = getPagingData(data, page, limit);
+      response.records = response.records.map(user =>
+        userWithBase64Avatar(user)
+      );
       res.status(200).send(response);
     })
     .catch(errors => {
@@ -109,6 +122,7 @@ const create = (req, res) => {
             message: 'Something went wrong!',
             error: ldapBindErr,
           });
+          ldapClient.destroy();
         } else {
           const transaction = await sequelize.transaction();
           // create new LDAP user
@@ -133,6 +147,7 @@ const create = (req, res) => {
                       result,
                     });
                   }
+                  ldapClient.destroy();
                 }
               );
             })
@@ -143,6 +158,7 @@ const create = (req, res) => {
                 message: 'Something went wrong!',
                 errors,
               });
+              ldapClient.destroy();
             });
         }
       }
@@ -171,6 +187,7 @@ const update = (req, res) => {
           message: 'Something went wrong!',
           error: ldapBindErr,
         });
+        ldapClient.destroy();
       } else {
         const transaction = await sequelize.transaction();
         User.update(user, { where: { id }, transaction })
@@ -182,48 +199,58 @@ const update = (req, res) => {
               res.status(404).json({
                 message: 'User not found!',
               });
+              ldapClient.destroy();
             } else {
-              const ldapChange = {
-                operation: 'replace',
-                modification: {},
+              const commit = async () => {
+                // commit transaction
+                await transaction.commit();
+                const result = await User.findByPk(id, {
+                  include: [
+                    {
+                      model: Organization,
+                      as: 'organization',
+                      attributes: ['id', 'fullName'],
+                    },
+                    {
+                      model: Avatar,
+                      as: 'avatar',
+                      attributes: ['type', 'data'],
+                    },
+                  ],
+                });
+                res.status(200).json({
+                  message: 'User updated successfully!',
+                  result: userWithBase64Avatar(result),
+                });
               };
               if (req.body?.fullName) {
-                ldapChange.modification = {
-                  cn: req.body?.fullName,
-                  sn: req.body?.fullName.split(' ')[0],
-                };
-              }
-              ldapClient.modify(
-                `uid=${userToUpdate.username},ou=users,ou=system`,
-                ldapChange,
-                async ldapChangeErr => {
-                  if (ldapChangeErr) {
-                    // roll back transaction (LDAP error)
-                    await transaction.rollback();
-                    res.status(500).json({
-                      message: 'Something went wrong!',
-                      error: ldapChangeErr,
-                    });
-                  } else {
-                    // commit transaction
-                    await transaction.commit();
-
-                    const result = await User.findByPk(id, {
-                      include: [
-                        {
-                          model: Organization,
-                          as: 'organization',
-                          attributes: ['id', 'fullName'],
-                        },
-                      ],
-                    });
-                    res.status(200).json({
-                      message: 'User updated successfully!',
-                      result,
-                    });
+                ldapClient.modify(
+                  `uid=${userToUpdate.username},ou=users,ou=system`,
+                  {
+                    operation: 'replace',
+                    modification: {
+                      cn: req.body?.fullName,
+                      sn: req.body?.fullName.split(' ')[0],
+                    },
+                  },
+                  async ldapChangeErr => {
+                    if (ldapChangeErr) {
+                      // roll back transaction (LDAP error)
+                      await transaction.rollback();
+                      res.status(500).json({
+                        message: 'Something went wrong!',
+                        error: ldapChangeErr,
+                      });
+                    } else {
+                      await commit();
+                    }
+                    ldapClient.destroy();
                   }
-                }
-              );
+                );
+              } else {
+                await commit();
+                ldapClient.destroy();
+              }
             }
           })
           .catch(async errors => {
@@ -233,6 +260,7 @@ const update = (req, res) => {
               message: 'Something went wrong!',
               errors,
             });
+            ldapClient.destroy();
           });
       }
     }

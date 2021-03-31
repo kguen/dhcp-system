@@ -12,6 +12,10 @@ module.exports = (sequelize, DataTypes) => {
         as: 'devices',
         foreignKey: 'userId',
       });
+      User.hasOne(models.Avatar, {
+        as: 'avatar',
+        foreignKey: 'userId',
+      });
     }
   }
   User.init(
