@@ -40,7 +40,7 @@ export const Header = () => {
     >
       {children}
       <img
-        className="rounded-circle"
+        className="rounded-circle avatar"
         width="21"
         height="21"
         src={
@@ -114,7 +114,7 @@ export const Header = () => {
               <Dropdown.Header className="p-0 rounded-top">
                 <div className="p-3 text-center rounded-top">
                   <img
-                    className="img-avatar img-avatar-thumb"
+                    className="img-avatar img-avatar-thumb avatar"
                     src={
                       user.data?.avatar
                         ? `data:${user.data.avatar.type};base64,${user.data.avatar.data}`

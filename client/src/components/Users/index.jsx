@@ -289,7 +289,7 @@ export const Users = () => {
                   </td>
                   <td className="text-center">
                     <img
-                      className="rounded-circle"
+                      className="rounded-circle avatar"
                       width="30"
                       height="30"
                       src={
