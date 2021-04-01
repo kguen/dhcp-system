@@ -178,7 +178,7 @@ export const Users = () => {
       <h3 className="text-center">Quản lý người dùng</h3>
       <div className="block block-rounded">
         <div className="block-content">
-          <div className="d-flex align-items-center justify-content-between">
+          <div className="header-form-container d-flex align-items-center justify-content-between">
             <Form.Group
               className="d-flex align-items-center"
               controlId="formPageSize"

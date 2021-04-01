@@ -87,7 +87,7 @@ export const AddOrg = ({ doSubmit }) => {
                   {errors.abbreviation?.message}
                 </Form.Control.Feedback>
                 <Form.Text className="text-muted">
-                  Ví dụ: khoa-cntt, khoa-cntt-ptn ...
+                  Ví dụ: khoa-cntt, khoa-cntt-ptn...
                 </Form.Text>
               </Form.Group>
               <Form.Group className="col-8" controlId="formFullName">
@@ -109,7 +109,7 @@ export const AddOrg = ({ doSubmit }) => {
               </Form.Group>
             </Form.Row>
             <Form.Row>
-              <Form.Group className="col-6 mb-2" controlId="formPhone">
+              <Form.Group className="col-12" controlId="formPhone">
                 <Form.Label>Điện thoại</Form.Label>
                 <Form.Control
                   type="text"
@@ -123,10 +123,12 @@ export const AddOrg = ({ doSubmit }) => {
                   {errors.phone?.message}
                 </Form.Control.Feedback>
                 <Form.Text className="text-muted">
-                  Nhập theo format SIM 10 số.
+                  Nhập số điện thoại theo format SIM 10 số.
                 </Form.Text>
               </Form.Group>
-              <Form.Group className="col-6 mb-2" controlId="formAddress">
+            </Form.Row>
+            <Form.Row>
+              <Form.Group className="col-12 mb-2" controlId="formAddress">
                 <Form.Label>Địa chỉ</Form.Label>
                 <Form.Control
                   type="text"
@@ -134,6 +136,9 @@ export const AddOrg = ({ doSubmit }) => {
                   placeholder="Nhập địa chỉ"
                   ref={register}
                 />
+                <Form.Text className="text-muted">
+                  Nhập địa chỉ phòng làm việc chính của đơn vị.
+                </Form.Text>
               </Form.Group>
             </Form.Row>
           </Modal.Body>

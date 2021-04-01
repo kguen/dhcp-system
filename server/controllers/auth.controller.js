@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 const ldapConfig = require('../config/ldapConfig');
-const { User, Organization, Avatar, sequelize } = require('../models');
+const { User, Avatar, sequelize } = require('../models');
 const { userWithBase64Avatar } = require('../utils');
 
 const login = (req, res) => {
@@ -17,7 +17,6 @@ const login = (req, res) => {
         res.status(401).json({
           message: 'Invalid credentials!',
         });
-        ldapClient.destroy();
       } else {
         const user = await User.findOne({
           where: { username: req.body?.username },
@@ -41,7 +40,6 @@ const login = (req, res) => {
           user: userWithBase64Avatar(user),
           token,
         });
-        ldapClient.destroy();
       }
     }
   );
@@ -50,11 +48,6 @@ const login = (req, res) => {
 const me = (req, res) => {
   User.findByPk(req.user.id, {
     include: [
-      {
-        model: Organization,
-        as: 'organization',
-        attributes: ['id', 'fullName'],
-      },
       {
         model: Avatar,
         as: 'avatar',
@@ -79,10 +72,9 @@ const update = (req, res) => {
   const avatar = req.files.find(file => file.fieldname === 'avatar');
   const user = {
     fullName: req.body?.fullName,
-    position: req.body?.position,
-    email: req.body?.email,
-    phone: req.body?.phone,
-    note: req.body?.note,
+    position: req.body.position === 'null' ? null : req.body?.position,
+    email: req.body.email === 'null' ? null : req.body?.email,
+    phone: req.body.phone === 'null' ? null : req.body?.phone,
     organizationId: req.body?.organizationId,
   };
   ldapClient.bind(
@@ -94,7 +86,6 @@ const update = (req, res) => {
           message: 'Something went wrong!',
           error: ldapBindErr,
         });
-        ldapClient.destroy();
       } else {
         const transaction = await sequelize.transaction();
         User.update(user, { where: { id }, transaction })
@@ -106,7 +97,6 @@ const update = (req, res) => {
               res.status(404).json({
                 message: 'User not found!',
               });
-              ldapClient.destroy();
             } else {
               try {
                 if (avatar) {
@@ -132,11 +122,6 @@ const update = (req, res) => {
                   await transaction.commit();
                   const updatedUser = await User.findByPk(id, {
                     include: [
-                      {
-                        model: Organization,
-                        as: 'organization',
-                        attributes: ['id', 'fullName'],
-                      },
                       {
                         model: Avatar,
                         as: 'avatar',
@@ -170,12 +155,10 @@ const update = (req, res) => {
                       } else {
                         await commit();
                       }
-                      ldapClient.destroy();
                     }
                   );
                 } else {
                   await commit();
-                  ldapClient.destroy();
                 }
               } catch (errors) {
                 // roll back transaction (SQL error)
@@ -184,7 +167,6 @@ const update = (req, res) => {
                   message: 'Something went wrong!',
                   errors,
                 });
-                ldapClient.destroy();
               }
             }
           })
@@ -195,7 +177,6 @@ const update = (req, res) => {
               message: 'Something went wrong!',
               errors,
             });
-            ldapClient.destroy();
           });
       }
     }

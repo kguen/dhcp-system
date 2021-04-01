@@ -155,7 +155,7 @@ export const UserDevices = () => {
 
   return (
     <div className="user-devices-container block-content">
-      <div className="d-flex align-items-center justify-content-between">
+      <div className="header-form-container d-flex align-items-center justify-content-between">
         <Form.Group
           className="d-flex align-items-center"
           controlId="formPageSize"

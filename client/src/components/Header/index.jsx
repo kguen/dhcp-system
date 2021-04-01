@@ -123,7 +123,12 @@ export const Header = () => {
                     alt="user avatar"
                   />
                   <h6 className="mt-2 mb-0 font-w500">{user.data?.fullName}</h6>
-                  <p className="mt-1 mb-0">{user.data?.position}</p>
+                  {user.data?.position && (
+                    <p className="mt-1 mb-0">{user.data?.position}</p>
+                  )}
+                  {user.data?.isAdmin && (
+                    <p className="mt-1 mb-0">Quản trị viên</p>
+                  )}
                 </div>
               </Dropdown.Header>
               <Dropdown.Divider className="m-0" />

@@ -96,7 +96,6 @@ const create = (req, res) => {
     email: req.body?.email,
     phone: req.body?.phone,
     isAdmin: req.body?.isAdmin,
-    note: req.body?.note,
     organizationId: req.body?.organizationId || null,
   };
   const ldapUser = {
@@ -122,7 +121,6 @@ const create = (req, res) => {
             message: 'Something went wrong!',
             error: ldapBindErr,
           });
-          ldapClient.destroy();
         } else {
           const transaction = await sequelize.transaction();
           // create new LDAP user
@@ -147,7 +145,6 @@ const create = (req, res) => {
                       result,
                     });
                   }
-                  ldapClient.destroy();
                 }
               );
             })
@@ -158,7 +155,6 @@ const create = (req, res) => {
                 message: 'Something went wrong!',
                 errors,
               });
-              ldapClient.destroy();
             });
         }
       }
@@ -175,7 +171,6 @@ const update = (req, res) => {
     email: req.body?.email,
     phone: req.body?.phone,
     isAdmin: req.body?.isAdmin,
-    note: req.body?.note,
     organizationId: req.body?.organizationId,
   };
   ldapClient.bind(
@@ -187,7 +182,6 @@ const update = (req, res) => {
           message: 'Something went wrong!',
           error: ldapBindErr,
         });
-        ldapClient.destroy();
       } else {
         const transaction = await sequelize.transaction();
         User.update(user, { where: { id }, transaction })
@@ -199,7 +193,6 @@ const update = (req, res) => {
               res.status(404).json({
                 message: 'User not found!',
               });
-              ldapClient.destroy();
             } else {
               const commit = async () => {
                 // commit transaction
@@ -244,12 +237,10 @@ const update = (req, res) => {
                     } else {
                       await commit();
                     }
-                    ldapClient.destroy();
                   }
                 );
               } else {
                 await commit();
-                ldapClient.destroy();
               }
             }
           })
@@ -260,7 +251,6 @@ const update = (req, res) => {
               message: 'Something went wrong!',
               errors,
             });
-            ldapClient.destroy();
           });
       }
     }

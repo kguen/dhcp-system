@@ -5,7 +5,6 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { PHONE_REGEX, PASSWORD_REGEX } from '../../../constants';
 import { sanitized } from '../../../utils';
-import './styles.scss';
 
 const schema = yup.object({
   username: yup.string().trim().required('Vui lòng nhập tên đăng nhập.'),
@@ -19,6 +18,11 @@ const schema = yup.object({
     message: 'Vui lòng nhập số điện thoại theo đúng format.',
     excludeEmptyString: true,
   }),
+  organizationId: yup
+    .number()
+    .required()
+    .positive('Vui lòng chọn đơn vị công tác.')
+    .integer(),
 });
 
 export const AddUser = ({ doSubmit, orgList }) => {
@@ -79,7 +83,7 @@ export const AddUser = ({ doSubmit, orgList }) => {
           </Modal.Header>
           <Modal.Body>
             <Form.Row>
-              <Form.Group className="col-4" controlId="formFullName">
+              <Form.Group className="col-12" controlId="formFullName">
                 <Form.Label className="required">Họ và tên</Form.Label>
                 <Form.Control
                   type="text"
@@ -93,7 +97,9 @@ export const AddUser = ({ doSubmit, orgList }) => {
                   {errors.fullName?.message}
                 </Form.Control.Feedback>
               </Form.Group>
-              <Form.Group className="col-4" controlId="formUsername">
+            </Form.Row>
+            <Form.Row>
+              <Form.Group className="col-6" controlId="formUsername">
                 <Form.Label className="required">Tên đăng nhập</Form.Label>
                 <Form.Control
                   type="text"
@@ -107,7 +113,7 @@ export const AddUser = ({ doSubmit, orgList }) => {
                   {errors.username?.message}
                 </Form.Control.Feedback>
               </Form.Group>
-              <Form.Group className="col-4" controlId="formPassword">
+              <Form.Group className="col-6" controlId="formPassword">
                 <Form.Label className="required">Mật khẩu</Form.Label>
                 <Form.Control
                   type="password"
@@ -154,12 +160,37 @@ export const AddUser = ({ doSubmit, orgList }) => {
                   {errors.phone?.message}
                 </Form.Control.Feedback>
                 <Form.Text className="text-muted">
-                  Nhập theo format SIM 10 số.
+                  Nhập số điện thoại theo format SIM 10 số.
                 </Form.Text>
               </Form.Group>
             </Form.Row>
             <Form.Row>
-              <Form.Group className="col-4 mb-2" controlId="formPosition">
+              <Form.Group className="col-12" controlId="formOrgId">
+                <Form.Label className="required">Đơn vị</Form.Label>
+                <Form.Control
+                  as="select"
+                  className="custom-select"
+                  name="organizationId"
+                  ref={register({
+                    valueAsNumber: true,
+                  })}
+                  isValid={touched.organizationId && !errors.organizationId}
+                  isInvalid={!!errors.organizationId}
+                >
+                  <option value="0">Chọn đơn vị</option>
+                  {orgList.map(item => (
+                    <option key={item.id} value={item.id}>
+                      {item.fullName}
+                    </option>
+                  ))}
+                </Form.Control>
+                <Form.Control.Feedback type="invalid">
+                  {errors.organizationId?.message}
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Form.Row>
+            <Form.Row>
+              <Form.Group className="col-9 mb-2" controlId="formPosition">
                 <Form.Label>Chức vụ</Form.Label>
                 <Form.Control
                   type="text"
@@ -171,28 +202,7 @@ export const AddUser = ({ doSubmit, orgList }) => {
                   Ví dụ: Giảng viên, quản trị viên...
                 </Form.Text>
               </Form.Group>
-              <div className="col-8 d-flex">
-                <Form.Group
-                  className="form-org-id mb-2 mr-1"
-                  controlId="formOrgId"
-                >
-                  <Form.Label>Đơn vị</Form.Label>
-                  <Form.Control
-                    as="select"
-                    className="custom-select"
-                    name="organizationId"
-                    ref={register({
-                      valueAsNumber: true,
-                    })}
-                  >
-                    <option value="0">Chọn đơn vị</option>
-                    {orgList.map(item => (
-                      <option key={item.id} value={item.id}>
-                        {item.fullName}
-                      </option>
-                    ))}
-                  </Form.Control>
-                </Form.Group>
+              <div className="d-flex">
                 <Form.Group
                   className="pl-2 d-flex align-items-center mb-0"
                   controlId="formIsAdmin"

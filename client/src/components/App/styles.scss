@@ -28,10 +28,15 @@ label {
     object-position: 0 0;
   }
 
+  .img-avatar-thumb {
+    margin: 0.3rem;
+    box-shadow: 0 0 0 0.3rem rgba(237, 240, 242, 1);
+  }
+
   .content-container {
     padding: 2rem 7rem 0 7rem;
 
-    .form-group {
+    .header-form-container .form-group {
       white-space: nowrap;
 
       .form-control,

@@ -6,7 +6,7 @@ import { BasicInfo } from './BasicInfo';
 import './styles.scss';
 
 export const Profile = () => {
-  const [tab, setTab] = useState(1);
+  const [tab, setTab] = useState(0);
 
   return (
     <div className="nav-container content-container profile-container">
