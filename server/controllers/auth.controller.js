@@ -183,8 +183,54 @@ const update = (req, res) => {
   );
 };
 
+const password = async (req, res) => {
+  const ldapClient = ldapjs.createClient(ldapConfig.clientOptions);
+  const { username } = await User.findByPk(req.user.id);
+
+  ldapClient.bind(
+    `uid=${username},ou=users,ou=system`,
+    req.body?.oldPassword,
+    async ldapBindErr => {
+      if (ldapBindErr) {
+        res.status(401).json({
+          message: 'Invalid credentials!',
+        });
+      } else {
+        ldapClient.modify(
+          `uid=${username},ou=users,ou=system`,
+          {
+            operation: 'replace',
+            modification: {
+              userPassword: req.body.newPassword,
+            },
+          },
+          async ldapChangeErr => {
+            if (ldapChangeErr) {
+              if (ldapChangeErr.lde_message.includes('reuse of password')) {
+                res.status(403).json({
+                  message: 'Reuse of old password is not allowed!',
+                });
+              } else {
+                res.status(500).json({
+                  message: 'Something went wrong!',
+                  error: ldapChangeErr,
+                });
+              }
+            } else {
+              res.status(200).json({
+                message: 'Password updated successfully!',
+              });
+            }
+          }
+        );
+      }
+    }
+  );
+};
+
 module.exports = {
   login,
   me,
   update,
+  password,
 };

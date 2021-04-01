@@ -4,7 +4,8 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { dhcpApi, tokenConfig } from '../../../../utils';
-import { AlertContext } from '../../../../contexts';
+import { UserContext, AlertContext } from '../../../../contexts';
+import { ALERT_TYPE } from '../../../../constants';
 
 const schema = yup.object({
   oldPassword: yup.string().trim().required('Vui lòng nhập mật khẩu cũ.'),
@@ -20,11 +21,13 @@ const schema = yup.object({
 });
 
 export const PasswordEdit = () => {
+  const { user } = useContext(UserContext);
   const { setAlert } = useContext(AlertContext);
   const {
     register,
     handleSubmit,
     setError,
+    setValue,
     errors,
     formState: { touched },
   } = useForm({
@@ -33,7 +36,34 @@ export const PasswordEdit = () => {
   });
 
   const onSubmit = data => {
-    console.log(data);
+    dhcpApi
+      .patch(`/auth/password`, data, tokenConfig(user))
+      .then(() => {
+        setAlert({
+          message: 'Thay đổi mật khẩu thành công!',
+          type: ALERT_TYPE.success,
+        });
+      })
+      .catch(err => {
+        if (err.response?.status === 401) {
+          setError('oldPassword', {
+            message: 'Mật khẩu cũ không chính xác, vui lòng nhập lại.',
+            shouldFocus: true,
+          });
+        } else if (err.response?.status === 403) {
+          setError('newPassword', {
+            message:
+              'Vui lòng không sử dụng lại mật khẩu đã từng sử dụng trong quá khứ.',
+            shouldFocus: true,
+          });
+          setValue('confirmPassword', '', { shouldValidate: true });
+        } else {
+          setAlert({
+            message: 'Đã xảy ra lỗi máy chủ!',
+            type: ALERT_TYPE.error,
+          });
+        }
+      });
   };
 
   return (

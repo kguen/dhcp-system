@@ -103,7 +103,7 @@ export const InfoEdit = () => {
   return (
     <div className="info-edit-container">
       <div className="block-header">
-        <h3 className="block-title">Thay đổi thông tin</h3>
+        <h3 className="block-title">Cập nhật thông tin</h3>
       </div>
       <div className="block-content">
         <Form className="row push" noValidate onSubmit={handleSubmit(onSubmit)}>
