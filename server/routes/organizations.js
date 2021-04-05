@@ -11,10 +11,12 @@ const {
 const router = express.Router();
 
 router.use(isAuthenticated);
+router.get('/list', list);
+
 router.use(isAdmin);
 
+// Admin routes
 router.get('/', index);
-router.get('/list', list);
 router.post('/', create);
 router.patch('/:id', update);
 router.delete('/:id', destroy);

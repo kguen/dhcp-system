@@ -2,15 +2,16 @@
   "name": "dhcp-api",
   "version": "1.0.0",
   "engines": {
-    "node": ">=9.0.0"
+    "node": ">=11.14.0"
   },
   "main": "index.js",
   "scripts": {
-    "start": "node -r dotenv/config index.js",
-    "dev": "nodemon -r dotenv/config --ignore seeders/ --ignore migrations/ --ignore scripts/ index.js",
+    "start": "sudo node -r dotenv/config index.js",
+    "dev": "sudo nodemon -r dotenv/config --ignore seeders/ --ignore migrations/ --ignore scripts/ index.js",
     "ldap-seed": "node -r dotenv/config scripts/seedLDAP.js",
     "ldap-purge": "node -r dotenv/config scripts/purgeLDAP.js",
-    "db-setup": "npx sequelize db:migrate && npx sequelize db:seed:all && yarn run ldap-seed",
+    "dhcp-config": "sudo node scripts/configDHCP.js",
+    "db-setup": "npx sequelize db:migrate && npx sequelize db:seed:all && yarn run ldap-seed && yarn run dhcp-config",
     "db-purge": "npx sequelize db:migrate:undo:all && yarn run ldap-purge"
   },
   "author": "kguen",

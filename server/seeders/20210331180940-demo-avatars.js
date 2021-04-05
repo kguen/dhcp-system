@@ -17,7 +17,7 @@ module.exports = {
         type: 'image/jpeg',
         name: 'kiendh.jpg',
         data: fs.readFileSync(
-          path.join(__dirname, '../', '/static/default/', 'kiendh.jpg')
+          path.join(__dirname, '../static/default/kiendh.jpg')
         ),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -27,7 +27,7 @@ module.exports = {
         type: 'image/jpeg',
         name: 'binhnn.jpg',
         data: fs.readFileSync(
-          path.join(__dirname, '../', '/static/default/', 'binhnn.jpg')
+          path.join(__dirname, '../static/default/binhnn.jpg')
         ),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -37,7 +37,7 @@ module.exports = {
         type: 'image/jpeg',
         name: 'nguyenthanhthuy.jpg',
         data: fs.readFileSync(
-          path.join(__dirname, '../', '/static/default/', 'nguyenthanhthuy.jpg')
+          path.join(__dirname, '../static/default/nguyenthanhthuy.jpg')
         ),
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -47,7 +47,7 @@ module.exports = {
         type: 'image/jpeg',
         name: 'thuyhq.jpg',
         data: fs.readFileSync(
-          path.join(__dirname, '../', '/static/default/', 'thuyhq.jpg')
+          path.join(__dirname, '../static/default/thuyhq.jpg')
         ),
         createdAt: new Date(),
         updatedAt: new Date(),

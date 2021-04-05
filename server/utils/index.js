@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const { Netmask, ip2long, long2ip } = require('netmask');
 const { Subnet, Device, User } = require('../models');
 
@@ -18,10 +20,12 @@ const getSubnetData = address => {
   const block = new Netmask(address);
   return {
     subnet: address,
+    base: block.base,
     mask: block.mask,
     firstIP: long2ip(ip2long(block.first) + 1),
     lastIP: block.last,
     gateway: block.first,
+    broadcast: block.broadcast,
   };
 };
 
@@ -68,10 +72,88 @@ const userWithBase64Avatar = user => {
   return thisUser;
 };
 
+const createBaseConfig = () =>
+  fs.promises.copyFile(
+    path.join(__dirname, '../static/templates/dhcpd.example'),
+    '/etc/dhcpd.conf'
+  );
+
+const createHostConfig = async subnet => {
+  const devices = await Device.findAll({
+    where: {
+      enabled: true,
+    },
+    include: [
+      {
+        model: User,
+        as: 'user',
+        attributes: ['id', 'fullName', 'username'],
+        where: { organizationId: subnet.organizationId },
+      },
+    ],
+  });
+  const config = fs.readFileSync(
+    path.join(__dirname, '../static/templates/host.example'),
+    'utf-8'
+  );
+  return fs.promises.writeFile(
+    `/etc/dhcp/hosts/hosts-${subnet.vlan}`,
+    devices.reduce(
+      (acc, device) =>
+        `${
+          acc +
+          config
+            .replace('*fullName*', device.user.fullName)
+            .replace('*username*', device.user.username)
+            .replace('*id*', device.id)
+            .replace(/\*macAddress\*/g, device.macAddress)
+            .replace('*ipAddress*', device.ipAddress)
+        }\n`,
+      ''
+    )
+  );
+};
+
+const createSubnetConfig = async (updateId = null) => {
+  const subnets = await Subnet.findAll();
+  const updatedSubnet = await Subnet.findByPk(updateId);
+  const config = fs.readFileSync(
+    path.join(__dirname, '../static/templates/subnet.example'),
+    'utf-8'
+  );
+  return Promise.all([
+    ...(updatedSubnet
+      ? [createHostConfig(updatedSubnet)]
+      : subnets.map(subnet => createHostConfig(subnet))),
+    fs.promises.writeFile(
+      '/etc/dhcp/subnets',
+      subnets.reduce(
+        (acc, subnet) =>
+          `${
+            acc +
+            config
+              .replace(/\*vlan\*/g, subnet.vlan)
+              .replace('*subnet*', subnet.subnet)
+              .replace('*base*', subnet.base)
+              .replace(/\*mask\*/g, subnet.mask)
+              .replace('*broadcast*', subnet.broadcast)
+              .replace('*gateway*', subnet.gateway)
+              .replace('*firstIP*', subnet.firstIP)
+              .replace('*lastIP*', subnet.lastIP)
+          }\n`,
+        ''
+      )
+    ),
+  ]);
+};
+
 module.exports = {
   getPagination,
   getPagingData,
   getSubnetData,
   getNewIpFromUserId,
   userWithBase64Avatar,
+  createBaseConfig,
+  createSubnetConfig,
+  createHostConfig,
 };

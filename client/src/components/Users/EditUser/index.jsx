@@ -29,7 +29,7 @@ export const EditUser = ({ doSubmit, initialData, orgList }) => {
     setError,
     watch,
     reset,
-    formState: { touched },
+    formState: { touched, isDirty },
   } = useForm({
     mode: 'onTouched',
     defaultValues: initialData,
@@ -183,7 +183,7 @@ export const EditUser = ({ doSubmit, initialData, orgList }) => {
             <Button variant="alt-secondary" onClick={hideModal}>
               Hủy
             </Button>
-            <Button variant="alt-primary" type="submit">
+            <Button variant="alt-primary" type="submit" disabled={!isDirty}>
               Lưu thay đổi
             </Button>
           </Modal.Footer>

@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       Avatar.belongsTo(models.User, {
         as: 'user',
         foreignKey: 'userId',
+        onDelete: 'CASCADE',
       });
     }
   }

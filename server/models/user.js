@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
       User.belongsTo(models.Organization, {
         as: 'organization',
         foreignKey: 'organizationId',
+        onDelete: 'CASCADE',
       });
       User.hasMany(models.Device, {
         as: 'devices',

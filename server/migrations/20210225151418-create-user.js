@@ -18,6 +18,7 @@ module.exports = {
       },
       organizationId: {
         type: Sequelize.INTEGER,
+        onDelete: 'CASCADE',
         references: {
           model: 'Organizations',
           key: 'id',

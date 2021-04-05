@@ -25,7 +25,7 @@ export const EditSubnet = ({ doSubmit, initialData, orgList }) => {
     setError,
     setValue,
     reset,
-    formState: { touched },
+    formState: { touched, isDirty },
   } = useForm({
     mode: 'onTouched',
     defaultValues: initialData,
@@ -42,11 +42,18 @@ export const EditSubnet = ({ doSubmit, initialData, orgList }) => {
     try {
       await doSubmit(data, initialData.id);
       hideModal();
-    } catch {
-      setError('vlan', {
-        message: 'Tên VLAN này đã tồn tại!',
-        shouldFocus: true,
-      });
+    } catch (err) {
+      if (err.message === 'SubnetSizeError') {
+        setError('subnet', {
+          message:
+            'Subnet mới không có đủ địa chỉ IP để cấp phát cho toàn bộ thiết bị hiện có của đơn vị!',
+        });
+      } else if (err.message === 'VlanNameError') {
+        setError('vlan', {
+          message: 'Tên VLAN này đã tồn tại!',
+          shouldFocus: true,
+        });
+      }
     }
   };
 
@@ -145,7 +152,7 @@ export const EditSubnet = ({ doSubmit, initialData, orgList }) => {
             <Button variant="alt-secondary" onClick={hideModal}>
               Hủy
             </Button>
-            <Button variant="alt-primary" type="submit">
+            <Button variant="alt-primary" type="submit" disabled={!isDirty}>
               Lưu thay đổi
             </Button>
           </Modal.Footer>

@@ -46,7 +46,7 @@ const isOwnedDeviceOrAdmin = async (req, res, next) => {
 const fileUploader = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, path.join(__dirname, '../', '/static/uploads/'));
+      cb(null, path.join(__dirname, '../static/uploads/'));
     },
     filename: (req, file, cb) => {
       cb(null, `${new Date().getTime()}-${file.originalname}`);

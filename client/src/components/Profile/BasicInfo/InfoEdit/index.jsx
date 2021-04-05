@@ -43,7 +43,7 @@ export const InfoEdit = () => {
     errors,
     reset,
     watch,
-    formState: { touched },
+    formState: { touched, isDirty },
   } = useForm({
     mode: 'onTouched',
     resolver: yupResolver(schema),
@@ -81,17 +81,11 @@ export const InfoEdit = () => {
           type: ALERT_TYPE.success,
         });
       })
-      .catch(err => {
-        if (
-          err.response?.data?.errors?.name === 'SequelizeUniqueConstraintError'
-        ) {
-          throw new Error();
-        } else {
-          setAlert({
-            message: 'Đã xảy ra lỗi máy chủ!',
-            type: ALERT_TYPE.error,
-          });
-        }
+      .catch(() => {
+        setAlert({
+          message: 'Đã xảy ra lỗi máy chủ!',
+          type: ALERT_TYPE.error,
+        });
       });
   };
 
@@ -257,7 +251,7 @@ export const InfoEdit = () => {
               </Form.Text>
             </Form.Group>
             <Form.Group>
-              <Button variant="alt-primary" type="submit">
+              <Button variant="alt-primary" type="submit" disabled={!isDirty}>
                 Cập nhật thông tin
               </Button>
             </Form.Group>

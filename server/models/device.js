@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
       Device.belongsTo(models.User, {
         as: 'user',
         foreignKey: 'userId',
+        onDelete: 'CASCADE',
       });
     }
   }

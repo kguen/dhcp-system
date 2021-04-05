@@ -1,8 +1,18 @@
+const fs = require('fs');
 const { v4 } = require('is-cidr');
-const { getPagination, getPagingData, getSubnetData } = require('../utils');
+const { ip2long, long2ip } = require('netmask');
+const {
+  getPagination,
+  getPagingData,
+  getSubnetData,
+  createSubnetConfig,
+} = require('../utils');
 const {
   Subnet,
   Organization,
+  Device,
+  User,
+  sequelize,
   Sequelize: { Op },
 } = require('../models');
 
@@ -52,11 +62,19 @@ const create = (req, res) => {
     ...getSubnetData(req.body.subnet),
   };
   Subnet.create(subnet)
-    .then(result => {
-      res.status(201).json({
-        message: 'Created subnet successfully!',
-        result,
-      });
+    .then(async result => {
+      try {
+        await createSubnetConfig(result.id);
+        res.status(201).json({
+          message: 'Created subnet successfully!',
+          result,
+        });
+      } catch (errors) {
+        res.status(500).json({
+          message: 'Something went wrong!',
+          errors,
+        });
+      }
     })
     .catch(errors => {
       res.status(500).json({
@@ -66,38 +84,116 @@ const create = (req, res) => {
     });
 };
 
-const update = (req, res) => {
+const update = async (req, res) => {
   if (!v4(req.body?.subnet)) {
     return res.status(500).json({
       message: 'Subnet address is not a valid CIDR IPv4 address!',
     });
   }
+  const transaction = await sequelize.transaction();
   const { id } = req.params;
   const subnet = {
     organizationId: req.body?.organizationId,
     vlan: req.body?.vlan,
     ...getSubnetData(req.body.subnet),
   };
-  Subnet.update(subnet, { where: { id } })
+  Subnet.update(subnet, { where: { id }, transaction })
     .then(async () => {
-      const result = await Subnet.findByPk(id, {
-        include: [
-          {
-            model: Organization,
-            as: 'organization',
-            attributes: ['id', 'fullName'],
-          },
-        ],
-      });
-      if (!result) {
+      const subnetToUpdate = await Subnet.findByPk(id);
+      if (!subnetToUpdate) {
+        await transaction.rollback();
         res.status(404).json({
           message: 'Subnet not found!',
         });
       } else {
-        res.status(200).json({
-          message: 'Subnet updated successfully!',
-          result,
-        });
+        if (
+          req.body?.subnet !== subnetToUpdate.subnet ||
+          req.body?.organizationId !== subnetToUpdate.organizationId
+        ) {
+          const devices = await Device.findAll({
+            attributes: ['id'],
+            include: [
+              {
+                model: User,
+                as: 'user',
+                where: { organizationId: subnetToUpdate.organizationId },
+              },
+            ],
+          });
+          if (req.body?.organizationId !== subnetToUpdate.organizationId) {
+            try {
+              await Promise.all([
+                ...devices.map(device =>
+                  Device.destroy({ where: { id: device.id }, transaction })
+                ),
+                fs.promises.rename(
+                  `/etc/dhcp/hosts/hosts-${subnetToUpdate.vlan}`,
+                  `/etc/dhcp/hosts/hosts-${subnetToUpdate.vlan}.old`
+                ),
+              ]);
+            } catch (errors) {
+              await transaction.rollback();
+              return res.status(500).json({
+                message: 'Something went wrong!',
+                errors,
+              });
+            }
+          }
+          if (req.body?.subnet !== subnetToUpdate.subnet) {
+            if (
+              devices.length >
+              ip2long(subnet.lastIP) - ip2long(subnet.firstIP) + 1
+            ) {
+              await transaction.rollback();
+              return res.status(500).json({
+                type: 'SubnetSizeError',
+                message:
+                  "New subnet doesn't have enough address for all of organization's devices!",
+              });
+            }
+            let iterIP = ip2long(subnet.firstIP);
+            try {
+              await Promise.all(
+                devices.map(device => {
+                  const ipAddress = long2ip(iterIP);
+                  iterIP += 1;
+                  return Device.update(
+                    { ipAddress },
+                    { where: { id: device.id }, transaction }
+                  );
+                })
+              );
+            } catch (errors) {
+              await transaction.rollback();
+              return res.status(500).json({
+                message: 'Something went wrong!',
+                errors,
+              });
+            }
+          }
+        }
+        try {
+          await transaction.commit();
+          await createSubnetConfig(id);
+          const result = await Subnet.findByPk(id, {
+            include: [
+              {
+                model: Organization,
+                as: 'organization',
+                attributes: ['id', 'fullName'],
+              },
+            ],
+          });
+          res.status(200).json({
+            message: 'Subnet updated successfully!',
+            result,
+          });
+        } catch (errors) {
+          res.status(500).json({
+            message: 'Something went wrong!',
+            errors,
+          });
+        }
       }
     })
     .catch(errors => {
@@ -108,22 +204,54 @@ const update = (req, res) => {
     });
 };
 
-const destroy = (req, res) => {
+const destroy = async (req, res) => {
   const { id } = req.params;
-
-  Subnet.destroy({ where: { id } })
-    .then(colCount => {
-      if (!colCount) {
-        res.status(404).json({
-          message: 'Subnet not found!',
+  const subnetToDelete = await Subnet.findByPk(id, {
+    attributes: ['vlan', 'organizationId'],
+  });
+  if (!subnetToDelete) {
+    return res.status(404).json({
+      message: 'Subnet not found!',
+    });
+  }
+  const transaction = await sequelize.transaction();
+  Subnet.destroy({ where: { id }, transaction })
+    .then(async () => {
+      try {
+        const devices = await Device.findAll({
+          attributes: ['id'],
+          include: [
+            {
+              model: User,
+              as: 'user',
+              where: { organizationId: subnetToDelete.organizationId },
+            },
+          ],
         });
-      } else {
+        await Promise.all([
+          createSubnetConfig(id),
+          ...devices.map(device =>
+            Device.destroy({ where: { id: device.id }, transaction })
+          ),
+        ]);
+        fs.renameSync(
+          `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}`,
+          `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}.old`
+        );
+        await transaction.commit();
         res.status(200).json({
           message: 'Subnet deleted successfully!',
         });
+      } catch (errors) {
+        await transaction.rollback();
+        res.status(500).json({
+          message: 'Something went wrong!',
+          errors,
+        });
       }
     })
-    .catch(errors => {
+    .catch(async errors => {
+      await transaction.rollback();
       res.status(500).json({
         message: 'Something went wrong!',
         errors,

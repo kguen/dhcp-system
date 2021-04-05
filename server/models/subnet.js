@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
       Subnet.belongsTo(models.Organization, {
         as: 'organization',
         foreignKey: 'organizationId',
+        onDelete: 'CASCADE',
       });
     }
   }
@@ -44,9 +45,11 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
       },
+      base: DataTypes.STRING,
       mask: DataTypes.STRING,
       firstIP: DataTypes.STRING,
       lastIP: DataTypes.STRING,
+      broadcast: DataTypes.STRING,
       gateway: DataTypes.STRING,
     },
     {

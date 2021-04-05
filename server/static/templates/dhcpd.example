@@ -1,0 +1,18 @@
+ddns-update-style interim;
+ignore client-updates;
+# Địa chỉ IP của port mạng cung cấp địa chỉ IP động cho các VLAN.
+local-address 192.168.200.10;
+# Khai báo tên miền của Server
+option domain-name "uet.vnu.edu.vn";
+# Khai báo địa chỉ DNS cho các dải IP được cấp
+option domain-name-servers 10.10.0.7;
+# Khai báo thời gian địa chỉ IP được lưu trữ: 6000s
+default-lease-time 6000;
+# Khai báo thời gian hết hạn địa chỉ IP được cấp: 7200s
+max-lease-time 7200;
+
+# Khai báo Subnet cho Interface eth1
+subnet 192.168.200.0 netmask 255.255.255.0 {
+}
+
+include "/etc/dhcp/subnets";

@@ -1,0 +1,9 @@
+# *vlan*: *subnet*
+subnet *base* netmask *mask* {
+  option broadcast-address *broadcast*;
+  option routers *gateway*;
+  option subnet-mask *mask*;
+  range dynamic-bootp *firstIP* *lastIP*;
+
+  include "/etc/dhcp/hosts/hosts-*vlan*";
+}

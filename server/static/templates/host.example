@@ -1,0 +1,5 @@
+# User: *fullName*
+host *username*-*id* {
+  hardware ethernet *macAddress*;
+  fixed-address *ipAddress*;
+}

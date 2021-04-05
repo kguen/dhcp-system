@@ -9,6 +9,11 @@ module.exports = {
       },
       userId: {
         allowNull: false,
+        onDelete: 'CASCADE',
+        references: {
+          model: 'Users',
+          key: 'id',
+        },
         type: Sequelize.INTEGER,
       },
       macAddress: {

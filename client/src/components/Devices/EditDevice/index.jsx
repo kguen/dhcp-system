@@ -29,7 +29,7 @@ export const EditDevice = ({ doSubmit, initialData, orgList, userList }) => {
     errors,
     setError,
     reset,
-    formState: { touched },
+    formState: { touched, isDirty },
   } = useForm({
     mode: 'onTouched',
     defaultValues: initialData,
@@ -195,7 +195,7 @@ export const EditDevice = ({ doSubmit, initialData, orgList, userList }) => {
             <Button variant="alt-secondary" onClick={hideModal}>
               Hủy
             </Button>
-            <Button variant="alt-primary" type="submit">
+            <Button variant="alt-primary" type="submit" disabled={!isDirty}>
               Lưu thay đổi
             </Button>
           </Modal.Footer>

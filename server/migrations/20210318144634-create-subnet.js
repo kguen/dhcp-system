@@ -9,6 +9,12 @@ module.exports = {
       },
       organizationId: {
         allowNull: false,
+        unique: true,
+        onDelete: 'CASCADE',
+        references: {
+          model: 'Organizations',
+          key: 'id',
+        },
         type: Sequelize.INTEGER,
       },
       vlan: {
@@ -18,6 +24,9 @@ module.exports = {
       },
       subnet: {
         allowNull: false,
+        type: Sequelize.STRING,
+      },
+      base: {
         type: Sequelize.STRING,
       },
       mask: {
@@ -30,6 +39,9 @@ module.exports = {
         type: Sequelize.STRING,
       },
       gateway: {
+        type: Sequelize.STRING,
+      },
+      broadcast: {
         type: Sequelize.STRING,
       },
       createdAt: {
