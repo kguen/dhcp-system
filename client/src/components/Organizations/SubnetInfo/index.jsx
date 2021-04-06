@@ -263,7 +263,11 @@ export const SubnetInfo = () => {
                     initialData={item}
                     {...{ orgList }}
                   />
-                  <DeleteRecord doSubmit={deleteRecord} recordId={item.id} />
+                  <DeleteRecord
+                    doSubmit={deleteRecord}
+                    recordId={item.id}
+                    message="Xóa subnet đồng nghĩa với việc thông tin các thiết bị trong subnet sẽ bị xóa khỏi hệ thống!"
+                  />
                 </ButtonGroup>
               </td>
             </tr>

@@ -330,6 +330,7 @@ export const Users = () => {
                       <DeleteRecord
                         doSubmit={deleteRecord}
                         recordId={item.id}
+                        message="Xóa người dùng đồng nghĩa với việc thông tin các thiết bị của người dùng sẽ bị xóa khỏi hệ thống!"
                       />
                     </ButtonGroup>
                   </td>

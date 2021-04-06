@@ -5,6 +5,7 @@ const {
   getPagination,
   getPagingData,
   userWithBase64Avatar,
+  updateHostConfig,
 } = require('../utils');
 const {
   User,
@@ -272,7 +273,22 @@ const destroy = (req, res) => {
         });
       } else {
         const transaction = await sequelize.transaction();
-        const userToDelete = await User.findByPk(id);
+        const userToDelete = await User.findByPk(id, {
+          attributes: ['username'],
+          include: [
+            {
+              model: Organization,
+              as: 'organization',
+              attributes: ['id'],
+              include: [
+                {
+                  model: Subnet,
+                  as: 'subnet',
+                },
+              ],
+            },
+          ],
+        });
 
         User.destroy({ where: { id }, transaction })
           .then(async colCount => {
@@ -293,11 +309,20 @@ const destroy = (req, res) => {
                       error: ldapDelErr,
                     });
                   } else {
-                    // commit transaction
-                    await transaction.commit();
-                    res.status(200).json({
-                      message: 'User deleted successfully!',
-                    });
+                    try {
+                      // commit transaction
+                      await transaction.commit();
+                      // update deleted user's subnet's hosts config
+                      await updateHostConfig(userToDelete.organization.subnet);
+                      res.status(200).json({
+                        message: 'User deleted successfully!',
+                      });
+                    } catch (errors) {
+                      res.status(500).json({
+                        message: 'Something went wrong!',
+                        errors,
+                      });
+                    }
                   }
                 }
               );

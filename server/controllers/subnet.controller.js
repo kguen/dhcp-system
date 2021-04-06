@@ -5,7 +5,7 @@ const {
   getPagination,
   getPagingData,
   getSubnetData,
-  createSubnetConfig,
+  updateSubnetConfig,
 } = require('../utils');
 const {
   Subnet,
@@ -64,7 +64,8 @@ const create = (req, res) => {
   Subnet.create(subnet)
     .then(async result => {
       try {
-        await createSubnetConfig(result.id);
+        // update subnet config
+        await updateSubnetConfig(result.id);
         res.status(201).json({
           message: 'Created subnet successfully!',
           result,
@@ -101,6 +102,7 @@ const update = async (req, res) => {
     .then(async () => {
       const subnetToUpdate = await Subnet.findByPk(id);
       if (!subnetToUpdate) {
+        // roll back transaction (SQL error)
         await transaction.rollback();
         res.status(404).json({
           message: 'Subnet not found!',
@@ -121,17 +123,20 @@ const update = async (req, res) => {
             ],
           });
           if (req.body?.organizationId !== subnetToUpdate.organizationId) {
+            // change organization -> delete current devices
             try {
               await Promise.all([
                 ...devices.map(device =>
                   Device.destroy({ where: { id: device.id }, transaction })
                 ),
+                // move old subnet hosts to archive
                 fs.promises.rename(
                   `/etc/dhcp/hosts/hosts-${subnetToUpdate.vlan}`,
                   `/etc/dhcp/hosts/hosts-${subnetToUpdate.vlan}.old`
                 ),
               ]);
             } catch (errors) {
+              // roll back transaction (file error)
               await transaction.rollback();
               return res.status(500).json({
                 message: 'Something went wrong!',
@@ -140,10 +145,12 @@ const update = async (req, res) => {
             }
           }
           if (req.body?.subnet !== subnetToUpdate.subnet) {
+            // change subnet address -> check subnet length -> update devices' ip
             if (
               devices.length >
               ip2long(subnet.lastIP) - ip2long(subnet.firstIP) + 1
             ) {
+              // roll back transaction
               await transaction.rollback();
               return res.status(500).json({
                 type: 'SubnetSizeError',
@@ -164,6 +171,7 @@ const update = async (req, res) => {
                 })
               );
             } catch (errors) {
+              // roll back transaction (file error)
               await transaction.rollback();
               return res.status(500).json({
                 message: 'Something went wrong!',
@@ -174,7 +182,8 @@ const update = async (req, res) => {
         }
         try {
           await transaction.commit();
-          await createSubnetConfig(id);
+          // create new subnet config
+          await updateSubnetConfig(id);
           const result = await Subnet.findByPk(id, {
             include: [
               {
@@ -196,7 +205,9 @@ const update = async (req, res) => {
         }
       }
     })
-    .catch(errors => {
+    .catch(async errors => {
+      // roll back transaction (SQL error)
+      await transaction.rollback();
       res.status(500).json({
         message: 'Something went wrong!',
         errors,
@@ -229,11 +240,12 @@ const destroy = async (req, res) => {
           ],
         });
         await Promise.all([
-          createSubnetConfig(id),
+          updateSubnetConfig(id), // create new subnet config
           ...devices.map(device =>
             Device.destroy({ where: { id: device.id }, transaction })
           ),
         ]);
+        // move old subnet hosts to archive
         fs.renameSync(
           `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}`,
           `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}.old`
@@ -243,6 +255,7 @@ const destroy = async (req, res) => {
           message: 'Subnet deleted successfully!',
         });
       } catch (errors) {
+        // roll back transaction (file error)
         await transaction.rollback();
         res.status(500).json({
           message: 'Something went wrong!',
@@ -251,6 +264,7 @@ const destroy = async (req, res) => {
       }
     })
     .catch(async errors => {
+      // roll back transaction (SQL error)
       await transaction.rollback();
       res.status(500).json({
         message: 'Something went wrong!',

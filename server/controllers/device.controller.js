@@ -2,11 +2,13 @@ const {
   getPagination,
   getPagingData,
   getNewIpFromUserId,
+  updateHostConfig,
 } = require('../utils');
 const {
   Device,
   Organization,
   User,
+  Subnet,
   Sequelize: { Op },
 } = require('../models');
 
@@ -111,11 +113,45 @@ const create = async (req, res) => {
     ipAddress,
   };
   Device.create(device)
-    .then(result => {
-      res.status(201).json({
-        message: 'Created organization successfully!',
-        result,
-      });
+    .then(async result => {
+      try {
+        const { subnet } = (
+          await Device.findByPk(result.id, {
+            attributes: ['id'],
+            include: [
+              {
+                model: User,
+                as: 'user',
+                attributes: ['id'],
+                include: [
+                  {
+                    model: Organization,
+                    as: 'organization',
+                    attributes: ['id'],
+                    include: [
+                      {
+                        model: Subnet,
+                        as: 'subnet',
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          })
+        ).user.organization;
+        // update host config
+        await updateHostConfig(subnet);
+        res.status(201).json({
+          message: 'Created organization successfully!',
+          result,
+        });
+      } catch (errors) {
+        res.status(500).json({
+          message: 'Something went wrong!',
+          errors,
+        });
+      }
     })
     .catch(errors => {
       res.status(500).json({
@@ -127,8 +163,9 @@ const create = async (req, res) => {
 
 const update = async (req, res) => {
   const { id } = req.params;
-  const userId = req.body?.userId;
+  const userId = req.body?.userId; // required if user is admin
   let ipAddress;
+  let oldSubnet;
 
   if (req.user.isAdmin && userId) {
     // 1: check if device exists and get device info for 2
@@ -143,8 +180,13 @@ const update = async (req, res) => {
     // 2: generate new IP address if organization has been changed
     if (
       thisDevice.user.organizationId !==
-      (await User.findByPk(userId)).organizationId
+      (await User.findByPk(userId, { attributes: ['organizationId'] }))
+        .organizationId
     ) {
+      // save old subnet for updating its host config
+      oldSubnet = await Subnet.findOne({
+        where: { organizationId: thisDevice.user.organizationId },
+      });
       ipAddress = await getNewIpFromUserId(req.body?.userId);
       if (!ipAddress) {
         return res.status(500).json({
@@ -165,26 +207,45 @@ const update = async (req, res) => {
 
   Device.update(deviceToUpdate, { where: { id } })
     .then(async () => {
-      const result = await Device.findByPk(id, {
-        include: [
-          {
-            model: User,
-            as: 'user',
-            attributes: ['id', 'fullName'],
-            include: [
-              {
-                model: Organization,
-                as: 'organization',
-                attributes: ['id', 'fullName'],
-              },
-            ],
-          },
-        ],
-      });
-      res.status(200).json({
-        message: 'Device updated successfully!',
-        result,
-      });
+      try {
+        const result = await Device.findByPk(id, {
+          include: [
+            {
+              model: User,
+              as: 'user',
+              attributes: ['id', 'fullName'],
+              include: [
+                {
+                  model: Organization,
+                  as: 'organization',
+                  attributes: ['id', 'fullName'],
+                  include: [
+                    {
+                      model: Subnet,
+                      as: 'subnet',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        // if subnet changed -> update host config for old subnet
+        // and update host config for device's current subnet
+        await Promise.all([
+          ...(oldSubnet ? [updateHostConfig(oldSubnet)] : []),
+          updateHostConfig(result.user.organization.subnet),
+        ]);
+        res.status(200).json({
+          message: 'Device updated successfully!',
+          result,
+        });
+      } catch (errors) {
+        res.status(500).json({
+          message: 'Something went wrong!',
+          errors,
+        });
+      }
     })
     .catch(errors => {
       res.status(500).json({
@@ -194,19 +255,52 @@ const update = async (req, res) => {
     });
 };
 
-const destroy = (req, res) => {
+const destroy = async (req, res) => {
   const { id } = req.params;
-
+  const { subnet } = (
+    await Device.findByPk(id, {
+      attributes: ['id'],
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id'],
+          include: [
+            {
+              model: Organization,
+              as: 'organization',
+              attributes: ['id'],
+              include: [
+                {
+                  model: Subnet,
+                  as: 'subnet',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+  ).user.organization;
   Device.destroy({ where: { id } })
-    .then(colCount => {
+    .then(async colCount => {
       if (!colCount) {
         res.status(404).json({
           message: 'Device not found!',
         });
       } else {
-        res.status(200).json({
-          message: 'Device deleted successfully!',
-        });
+        // update host config
+        await updateHostConfig(subnet);
+        try {
+          res.status(200).json({
+            message: 'Device deleted successfully!',
+          });
+        } catch (errors) {
+          res.status(500).json({
+            message: 'Something went wrong!',
+            errors,
+          });
+        }
       }
     })
     .catch(errors => {

@@ -1,8 +1,8 @@
-const { createBaseConfig, createSubnetConfig } = require('../utils');
+const { createBaseConfig, updateSubnetConfig } = require('../utils');
 
 (async () => {
   try {
-    await Promise.all([createBaseConfig(), createSubnetConfig()]);
+    await Promise.all([createBaseConfig(), updateSubnetConfig()]);
     // eslint-disable-next-line no-console
     console.log('Updated configuration files for dhcpd.');
   } catch (err) {

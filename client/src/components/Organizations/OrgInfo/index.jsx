@@ -236,7 +236,11 @@ export const OrgInfo = () => {
               <td className="text-center font-size-sm">
                 <ButtonGroup>
                   <EditOrg doSubmit={editRecord} initialData={item} />
-                  <DeleteRecord doSubmit={deleteRecord} recordId={item.id} />
+                  <DeleteRecord
+                    doSubmit={deleteRecord}
+                    recordId={item.id}
+                    message="Xóa đơn vị đồng nghĩa với việc thông tin subnet và các thiết bị thuộc subnet sẽ bị xóa khỏi hệ thống!"
+                  />
                 </ButtonGroup>
               </td>
             </tr>

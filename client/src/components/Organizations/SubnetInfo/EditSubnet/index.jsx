@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { v4 } from 'is-cidr';
+import { ConfirmEdit } from './ConfirmEdit';
 
 const schema = yup.object({
   vlan: yup.string().trim().required('Vui lòng nhập tên VLAN.'),
@@ -82,7 +83,7 @@ export const EditSubnet = ({ doSubmit, initialData, orgList }) => {
         contentClassName="block block-rounded mb-0"
         centered
       >
-        <Form noValidate onSubmit={handleSubmit(onSubmit)}>
+        <Form noValidate>
           <Modal.Header className="block-header bg-body px-3">
             <i className="far fa-fw fa-edit mr-2" />
             <Modal.Title className="block-title">Cập nhật subnet</Modal.Title>
@@ -124,6 +125,13 @@ export const EditSubnet = ({ doSubmit, initialData, orgList }) => {
                     </option>
                   ))}
                 </Form.Control>
+                <Form.Text className="text-danger">
+                  <strong>
+                    <u>Lưu ý</u>:
+                  </strong>{' '}
+                  Nếu thay đổi đơn vị của subnet thì thông tin của các thiết bị
+                  hiện tại thuộc subnet sẽ bị xóa!
+                </Form.Text>
               </Form.Group>
             </Form.Row>
             <Form.Row>
@@ -152,9 +160,7 @@ export const EditSubnet = ({ doSubmit, initialData, orgList }) => {
             <Button variant="alt-secondary" onClick={hideModal}>
               Hủy
             </Button>
-            <Button variant="alt-primary" type="submit" disabled={!isDirty}>
-              Lưu thay đổi
-            </Button>
+            <ConfirmEdit {...{ isDirty }} doSubmit={handleSubmit(onSubmit)} />
           </Modal.Footer>
         </Form>
       </Modal>

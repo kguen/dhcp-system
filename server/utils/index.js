@@ -78,7 +78,7 @@ const createBaseConfig = () =>
     '/etc/dhcpd.conf'
   );
 
-const createHostConfig = async subnet => {
+const updateHostConfig = async subnet => {
   const devices = await Device.findAll({
     where: {
       enabled: true,
@@ -114,7 +114,7 @@ const createHostConfig = async subnet => {
   );
 };
 
-const createSubnetConfig = async (updateId = null) => {
+const updateSubnetConfig = async (updateId = null) => {
   const subnets = await Subnet.findAll();
   const updatedSubnet = await Subnet.findByPk(updateId);
   const config = fs.readFileSync(
@@ -123,8 +123,8 @@ const createSubnetConfig = async (updateId = null) => {
   );
   return Promise.all([
     ...(updatedSubnet
-      ? [createHostConfig(updatedSubnet)]
-      : subnets.map(subnet => createHostConfig(subnet))),
+      ? [updateHostConfig(updatedSubnet)]
+      : subnets.map(subnet => updateHostConfig(subnet))),
     fs.promises.writeFile(
       '/etc/dhcp/subnets',
       subnets.reduce(
@@ -154,6 +154,6 @@ module.exports = {
   getNewIpFromUserId,
   userWithBase64Avatar,
   createBaseConfig,
-  createSubnetConfig,
-  createHostConfig,
+  updateSubnetConfig,
+  updateHostConfig,
 };

@@ -1,0 +1,135 @@
+# Xóa bảng filter hiện thời
+modprobe ip_conntrack
+modprobe ip_conntrack_ftp
+modprobe iptable_nat
+modprobe ip_nat_ftp
+
+iptables -F
+iptables -t nat -F
+
+# Mặc định là cấm tất cả các luồng thông tin
+iptables -P INPUT DROP
+iptables -P OUTPUT DROP
+iptables -P FORWARD DROP
+iptables -X
+
+## Định nghĩa các tham số
+
+# Cổng vao Trung tâm Máy tính
+INTERNAL_INT="eth0"
+INTERNAL_IP=="`ifconfig $INTERNAL_INT | grep 'inet addr' | awk '{print $2}' | sed -e 's/.*://'`"
+
+# Cổng ra Internet
+EXTERNAL_INT="eth1"
+EXTERNAL_IP="`ifconfig $EXTERNAL_INT | grep 'inet addr' | awk '{print $2}' | sed -e 's/.*://'`"
+
+# Cổng sang E3
+EXTERNAL_INT2="eth2"
+EXTERNAL_IP2="`ifconfig $EXTERNAL_INT2 | grep 'inet addr' | awk '{print $2}' | sed -e 's/.*://'`"
+
+# Subnet Trung tâm Máy tính
+INTERNAL_SUBNET="192.168.0.0/24"
+
+# Subnet E3
+EXTERNAL_SUBNET2="10.10.0.0/16"
+
+# Danh sách các port
+PORT_ON_GW_FOR_E3_TCP="80,22,53,161"
+PORT_ON_GW_FOR_E3_UDP="53,161"
+
+# Các luật chống giả mạo địa chỉ IP
+iptables -N valid-src
+iptables -N valid-dst
+
+iptables -N service-on-gw-4-ttmt
+iptables -N service-on-gw-4-E3
+
+iptables -N service-over-gw-4-ttmt
+
+iptables -N proxy
+
+# Allow User
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT 
+
+# Chống mạo danh địa chỉ mạng trống
+iptables -A INPUT -i $EXTERNAL_INT -j valid-src
+iptables -A FORWARD -i $EXTERNAL_INT -j valid-src
+
+iptables -A INPUT -i $EXTERNAL_INT2 -j valid-src
+
+# Chắn các gói tin với địa chỉ nguồn là private đi ra ngoài
+iptables -A OUTPUT -o $EXTERNAL_INT -j valid-dst
+iptables -A FORWARD -o $EXTERNAL_INT -j valid-dst
+
+# Địa chi multicast
+iptables -A valid-src -s 224.0.0.0/4 -j DROP
+iptables -A valid-src -s 240.0.0.0/5 -j DROP
+
+# Địa chỉ nội bộ
+iptables -A valid-src -s 127.0.0.0/8 -j DROP
+iptables -A valid-src -s 0.0.0.0/8 -j DROP
+iptables -A valid-src -s 169.254.0.0/16 -j DROP
+iptables -A valid-src -s $EXTERNAL_IP -j DROP
+iptables -A valid-src -s $INTERNAL_SUBNET -j DROP
+
+# Địa chỉ broadcast
+iptables -A valid-src -d 255.255.255.255 -j DROP
+iptables -A valid-dst -d 224.0.0.0/4 -j DROP
+
+## Luồng IN: 
+iptables -A INPUT -i $INTERNAL_INT -s $INTERNAL_SUBNET -j service-on-gw-4-ttmt
+iptables -A INPUT -i $INTERNAL_INT -s 192.168.2.2 -j ACCEPT
+# add by dungpc for 6509 to dns
+TMP_SUBNET="192.168.200.0/24"
+iptables -A INPUT -i $EXTERNAL_INT2 -s $TMP_SUBNET -j ACCEPT
+iptables -A INPUT -i $EXTERNAL_INT2 -p tcp -s 10.10.0.16 --dport 80 -j ACCEPT
+# end add by dungpc
+iptables -A INPUT -i $EXTERNAL_INT2 -s $EXTERNAL_SUBNET2 -j service-on-gw-4-E3
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Vào từ Trung tâm Máy tính
+iptables -A service-on-gw-4-ttmt  -j ACCEPT
+
+# Vào từ E3:
+iptables -A service-on-gw-4-E3 -p tcp -m multiport --dport $PORT_ON_GW_FOR_E3_TCP --syn -j proxy
+iptables -A service-on-gw-4-E3 -p udp -m multiport --dport $PORT_ON_GW_FOR_E3_UDP -j proxy
+
+# Luồng OUT
+iptables -A OUTPUT -o $EXTERNAL_INT -j ACCEPT
+iptables -A OUTPUT -o $EXTERNAL_INT2 -j ACCEPT
+iptables -A OUTPUT -o $INTERNAL_INT -j ACCEPT
+iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+## Luồng Forward
+iptables -A FORWARD -i $INTERNAL_INT -s $INTERNAL_SUBNET -j service-over-gw-4-ttmt
+# For bộ môn mạng
+iptables -A FORWARD -i $EXTERNAL_INT2 -s 10.10.0.18 -j  service-over-gw-4-ttmt
+iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Đi ra internet
+iptables -A service-over-gw-4-ttmt -j ACCEPT
+
+## Post Routing
+iptables -A POSTROUTING -t nat -o $EXTERNAL_INT -s $INTERNAL_SUBNET -j MASQUERADE
+iptables -A POSTROUTING -t nat -o $EXTERNAL_INT2 -s $INTERNAL_SUBNET -j MASQUERADE
+# For bộ môn mạng
+iptables -A POSTROUTING -t nat -o $EXTERNAL_INT -s 10.10.0.18 -j MASQUERADE
+
+## Ping
+# Ping vào gw
+iptables -A INPUT -i $INTERNAL_INT -p icmp --icmp-type echo-request -j ACCEPT
+iptables -A INPUT -i $EXTERNAL_INT2 -p icmp --icmp-type echo-request -j ACCEPT
+
+# Ping qua gw
+iptables -A FORWARD -p icmp --icmp-type echo-request -s $INTERNAL_SUBNET -j ACCEPT
+
+# Allow reply
+iptables -A INPUT -p icmp -m state --state ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p icmp -m state --state ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p icmp -m state --state ESTABLISHED -j ACCEPT
+
+# TODO: auto-update firewall utilities
+iptables -A proxy -s 10.10.224.66 -m limit --limit 10/s -j ACCEPT
+iptables -A proxy -s 10.10.8.2 -m limit --limit 10/s -j ACCEPT
+iptables -A proxy -s 10.10.20.0/22 -j ACCEPT

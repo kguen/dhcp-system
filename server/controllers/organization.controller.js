@@ -1,7 +1,15 @@
-const { getPagination, getPagingData } = require('../utils');
+const fs = require('fs');
+const {
+  getPagination,
+  getPagingData,
+  updateSubnetConfig,
+} = require('../utils');
 const {
   Organization,
   Subnet,
+  User,
+  Device,
+  sequelize,
   Sequelize: { Op },
 } = require('../models');
 
@@ -107,22 +115,61 @@ const update = (req, res) => {
     });
 };
 
-const destroy = (req, res) => {
+const destroy = async (req, res) => {
   const { id } = req.params;
+  const transaction = await sequelize.transaction();
 
-  Organization.destroy({ where: { id } })
-    .then(colCount => {
+  Organization.destroy({ where: { id }, transaction })
+    .then(async colCount => {
       if (!colCount) {
+        // roll back transaction (SQL error)
+        await transaction.rollback();
         res.status(404).json({
           message: 'Organization not found!',
         });
       } else {
-        res.status(200).json({
-          message: 'Organization deleted successfully!',
-        });
+        try {
+          const devicesToDelete = await Device.findAll({
+            attributes: ['id'],
+            include: [
+              {
+                model: User,
+                as: 'user',
+                where: { organizationId: id },
+              },
+            ],
+          });
+          const subnetToDelete = await Subnet.findOne({
+            attributes: ['vlan'],
+            where: { organizationId: id },
+          });
+          await Promise.all([
+            updateSubnetConfig(id), // create new subnet config
+            ...devicesToDelete.map(device =>
+              Device.destroy({ where: { id: device.id }, transaction })
+            ),
+          ]);
+          // move old subnet hosts to archive
+          fs.renameSync(
+            `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}`,
+            `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}.old`
+          );
+          await transaction.commit();
+          res.status(200).json({
+            message: 'Organization deleted successfully!',
+          });
+        } catch (errors) {
+          // roll back transaction (file error)
+          await transaction.rollback();
+          res.status(500).json({
+            message: 'Something went wrong!',
+            errors,
+          });
+        }
       }
     })
     .catch(errors => {
+      // roll back transaction (SQL error)
       res.status(500).json({
         message: 'Something went wrong!',
         errors,
