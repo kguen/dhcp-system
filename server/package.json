@@ -10,8 +10,8 @@
     "dev": "sudo nodemon -r dotenv/config --ignore seeders/ --ignore migrations/ --ignore scripts/ index.js",
     "ldap-seed": "node -r dotenv/config scripts/seedLDAP.js",
     "ldap-purge": "node -r dotenv/config scripts/purgeLDAP.js",
-    "dhcp-config": "sudo node scripts/configDHCP.js",
-    "db-setup": "npx sequelize db:migrate && npx sequelize db:seed:all && yarn run ldap-seed && yarn run dhcp-config",
+    "ip-config": "sudo node scripts/updateIpConfig.js",
+    "db-setup": "npx sequelize db:migrate && npx sequelize db:seed:all && yarn run ldap-seed && yarn run ip-config",
     "db-purge": "npx sequelize db:migrate:undo:all && yarn run ldap-purge"
   },
   "author": "kguen",

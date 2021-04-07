@@ -147,6 +147,27 @@ const updateSubnetConfig = async (updateId = null) => {
   ]);
 };
 
+const updateFirewallScript = async () => {
+  const firewallConfig = fs.readFileSync(
+    path.join(__dirname, '../static/templates/firewall.sh.example'),
+    'utf-8'
+  );
+  const ipListConfig = (
+    await Device.findAll({
+      attributes: ['ipAddress'],
+      where: { enabled: true },
+    })
+  ).reduce(
+    (acc, device) =>
+      `${acc}iptables -A proxy -s ${device.ipAddress} -m limit --limit 10/s -j ACCEPT\n`,
+    '\n'
+  );
+  return fs.promises.writeFile(
+    path.join(__dirname, '../scripts/firewall.sh'),
+    firewallConfig + ipListConfig
+  );
+};
+
 module.exports = {
   getPagination,
   getPagingData,
@@ -156,4 +177,5 @@ module.exports = {
   createBaseConfig,
   updateSubnetConfig,
   updateHostConfig,
+  updateFirewallScript,
 };

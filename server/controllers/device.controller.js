@@ -3,6 +3,7 @@ const {
   getPagingData,
   getNewIpFromUserId,
   updateHostConfig,
+  updateFirewallScript,
 } = require('../utils');
 const {
   Device,
@@ -140,8 +141,8 @@ const create = async (req, res) => {
             ],
           })
         ).user.organization;
-        // update host config
-        await updateHostConfig(subnet);
+        // update host config and firewall script
+        await Promise.all([updateHostConfig(subnet), updateFirewallScript()]);
         res.status(201).json({
           message: 'Created organization successfully!',
           result,
@@ -230,10 +231,12 @@ const update = async (req, res) => {
             },
           ],
         });
-        // if subnet changed -> update host config for old subnet
-        // and update host config for device's current subnet
         await Promise.all([
+          // if subnet changed -> update host config for old subnet
           ...(oldSubnet ? [updateHostConfig(oldSubnet)] : []),
+          // update firewall script (if device's ip or status changed - TODO?)
+          updateFirewallScript(),
+          // update host config for device's current subnet
           updateHostConfig(result.user.organization.subnet),
         ]);
         res.status(200).json({
@@ -289,8 +292,8 @@ const destroy = async (req, res) => {
           message: 'Device not found!',
         });
       } else {
-        // update host config
-        await updateHostConfig(subnet);
+        // update host config and firewall script
+        await Promise.all([updateHostConfig(subnet), updateFirewallScript()]);
         try {
           res.status(200).json({
             message: 'Device deleted successfully!',

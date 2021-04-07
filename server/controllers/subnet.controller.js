@@ -6,6 +6,7 @@ const {
   getPagingData,
   getSubnetData,
   updateSubnetConfig,
+  updateFirewallScript,
 } = require('../utils');
 const {
   Subnet,
@@ -125,18 +126,13 @@ const update = async (req, res) => {
           if (req.body?.organizationId !== subnetToUpdate.organizationId) {
             // change organization -> delete current devices
             try {
-              await Promise.all([
-                ...devices.map(device =>
+              await Promise.all(
+                devices.map(device =>
                   Device.destroy({ where: { id: device.id }, transaction })
-                ),
-                // move old subnet hosts to archive
-                fs.promises.rename(
-                  `/etc/dhcp/hosts/hosts-${subnetToUpdate.vlan}`,
-                  `/etc/dhcp/hosts/hosts-${subnetToUpdate.vlan}.old`
-                ),
-              ]);
+                )
+              );
             } catch (errors) {
-              // roll back transaction (file error)
+              // roll back transaction (SQL error)
               await transaction.rollback();
               return res.status(500).json({
                 message: 'Something went wrong!',
@@ -182,8 +178,20 @@ const update = async (req, res) => {
         }
         try {
           await transaction.commit();
-          // create new subnet config
-          await updateSubnetConfig(id);
+          if (
+            req.body?.subnet !== subnetToUpdate.subnet ||
+            req.body?.organizationId !== subnetToUpdate.organizationId
+          ) {
+            // create new subnet config and update firewall script
+            await Promise.all([updateSubnetConfig(id), updateFirewallScript()]);
+            if (req.body?.organizationId !== subnetToUpdate.organizationId) {
+              // change organization -> move subnet hosts to archive
+              fs.renameSync(
+                `/etc/dhcp/hosts/hosts-${subnetToUpdate.vlan}`,
+                `/etc/dhcp/hosts/hosts-${subnetToUpdate.vlan}.old`
+              );
+            }
+          }
           const result = await Subnet.findByPk(id, {
             include: [
               {
@@ -240,7 +248,8 @@ const destroy = async (req, res) => {
           ],
         });
         await Promise.all([
-          updateSubnetConfig(id), // create new subnet config
+          // create new subnet config
+          updateSubnetConfig(id),
           ...devices.map(device =>
             Device.destroy({ where: { id: device.id }, transaction })
           ),
@@ -251,6 +260,8 @@ const destroy = async (req, res) => {
           `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}.old`
         );
         await transaction.commit();
+        // update firewall script after commit
+        await updateFirewallScript();
         res.status(200).json({
           message: 'Subnet deleted successfully!',
         });

@@ -6,6 +6,7 @@ const {
   getPagingData,
   userWithBase64Avatar,
   updateHostConfig,
+  updateFirewallScript,
 } = require('../utils');
 const {
   User,
@@ -289,7 +290,6 @@ const destroy = (req, res) => {
             },
           ],
         });
-
         User.destroy({ where: { id }, transaction })
           .then(async colCount => {
             if (!colCount) {
@@ -313,7 +313,10 @@ const destroy = (req, res) => {
                       // commit transaction
                       await transaction.commit();
                       // update deleted user's subnet's hosts config
-                      await updateHostConfig(userToDelete.organization.subnet);
+                      await Promise.all([
+                        updateHostConfig(userToDelete.organization.subnet),
+                        updateFirewallScript(),
+                      ]);
                       res.status(200).json({
                         message: 'User deleted successfully!',
                       });

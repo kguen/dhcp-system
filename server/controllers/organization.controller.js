@@ -3,6 +3,7 @@ const {
   getPagination,
   getPagingData,
   updateSubnetConfig,
+  updateFirewallScript,
 } = require('../utils');
 const {
   Organization,
@@ -144,7 +145,8 @@ const destroy = async (req, res) => {
             where: { organizationId: id },
           });
           await Promise.all([
-            updateSubnetConfig(id), // create new subnet config
+            // create new subnet config and update firewall script
+            updateSubnetConfig(id),
             ...devicesToDelete.map(device =>
               Device.destroy({ where: { id: device.id }, transaction })
             ),
@@ -155,6 +157,8 @@ const destroy = async (req, res) => {
             `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}.old`
           );
           await transaction.commit();
+          // update firewall script after commit
+          await updateFirewallScript();
           res.status(200).json({
             message: 'Organization deleted successfully!',
           });
