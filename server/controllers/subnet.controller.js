@@ -132,8 +132,6 @@ const update = async (req, res) => {
                 )
               );
             } catch (errors) {
-              // roll back transaction (SQL error)
-              await transaction.rollback();
               return res.status(500).json({
                 message: 'Something went wrong!',
                 errors,
@@ -146,8 +144,6 @@ const update = async (req, res) => {
               devices.length >
               ip2long(subnet.lastIP) - ip2long(subnet.firstIP) + 1
             ) {
-              // roll back transaction
-              await transaction.rollback();
               return res.status(500).json({
                 type: 'SubnetSizeError',
                 message:
@@ -167,8 +163,6 @@ const update = async (req, res) => {
                 })
               );
             } catch (errors) {
-              // roll back transaction (file error)
-              await transaction.rollback();
               return res.status(500).json({
                 message: 'Something went wrong!',
                 errors,
@@ -247,27 +241,23 @@ const destroy = async (req, res) => {
             },
           ],
         });
-        await Promise.all([
-          // create new subnet config
-          updateSubnetConfig(id),
-          ...devices.map(device =>
+        await Promise.all(
+          devices.map(device =>
             Device.destroy({ where: { id: device.id }, transaction })
-          ),
-        ]);
+          )
+        );
+        await transaction.commit();
+        // update subnet config and firewall script after commit
+        await Promise.all([updateSubnetConfig(id), updateFirewallScript()]);
         // move old subnet hosts to archive
         fs.renameSync(
           `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}`,
           `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}.old`
         );
-        await transaction.commit();
-        // update firewall script after commit
-        await updateFirewallScript();
         res.status(200).json({
           message: 'Subnet deleted successfully!',
         });
       } catch (errors) {
-        // roll back transaction (file error)
-        await transaction.rollback();
         res.status(500).json({
           message: 'Something went wrong!',
           errors,

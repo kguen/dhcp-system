@@ -144,27 +144,23 @@ const destroy = async (req, res) => {
             attributes: ['vlan'],
             where: { organizationId: id },
           });
-          await Promise.all([
-            // create new subnet config and update firewall script
-            updateSubnetConfig(id),
-            ...devicesToDelete.map(device =>
+          await Promise.all(
+            devicesToDelete.map(device =>
               Device.destroy({ where: { id: device.id }, transaction })
-            ),
-          ]);
+            )
+          );
+          await transaction.commit();
+          // update subnet config and firewall script after commit
+          await Promise.all([updateSubnetConfig(id), updateFirewallScript()]);
           // move old subnet hosts to archive
           fs.renameSync(
             `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}`,
             `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}.old`
           );
-          await transaction.commit();
-          // update firewall script after commit
-          await updateFirewallScript();
           res.status(200).json({
             message: 'Organization deleted successfully!',
           });
         } catch (errors) {
-          // roll back transaction (file error)
-          await transaction.rollback();
           res.status(500).json({
             message: 'Something went wrong!',
             errors,
@@ -172,8 +168,9 @@ const destroy = async (req, res) => {
         }
       }
     })
-    .catch(errors => {
+    .catch(async errors => {
       // roll back transaction (SQL error)
+      await transaction.rollback();
       res.status(500).json({
         message: 'Something went wrong!',
         errors,

@@ -144,7 +144,7 @@ const create = async (req, res) => {
         // update host config and firewall script
         await Promise.all([updateHostConfig(subnet), updateFirewallScript()]);
         res.status(201).json({
-          message: 'Created organization successfully!',
+          message: 'Created device successfully!',
           result,
         });
       } catch (errors) {
