@@ -1,3 +1,4 @@
+const storage = require('node-persist');
 const {
   getPagination,
   getPagingData,
@@ -143,6 +144,8 @@ const create = async (req, res) => {
         ).user.organization;
         // update host config and firewall script
         await Promise.all([updateHostConfig(subnet), updateFirewallScript()]);
+        // update persistent flag
+        await storage.setItem('restartDHCP', true);
         res.status(201).json({
           message: 'Created device successfully!',
           result,
@@ -203,6 +206,7 @@ const update = async (req, res) => {
     macAddress: req.body?.macAddress,
     type: req.body?.type,
     enabled: req.body?.enabled,
+    waiting: true,
   };
   if (ipAddress) deviceToUpdate.ipAddress = ipAddress;
 
@@ -239,6 +243,8 @@ const update = async (req, res) => {
           // update host config for device's current subnet
           updateHostConfig(result.user.organization.subnet),
         ]);
+        // update persistent flag
+        await storage.setItem('restartDHCP', true);
         res.status(200).json({
           message: 'Device updated successfully!',
           result,
@@ -294,6 +300,8 @@ const destroy = async (req, res) => {
       } else {
         // update host config and firewall script
         await Promise.all([updateHostConfig(subnet), updateFirewallScript()]);
+        // update persistent flag
+        await storage.setItem('restartDHCP', true);
         try {
           res.status(200).json({
             message: 'Device deleted successfully!',

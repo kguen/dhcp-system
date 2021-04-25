@@ -114,7 +114,7 @@ export const App = () => {
                 />
                 <PrivateRoute exact path="/profile" component={Profile} />
                 <Route path="*">
-                  <Redirect to={user.data?.isAdmin ? '/orgs' : '/profile'} />
+                  <Redirect to={user.data?.isAdmin ? '/devices' : '/profile'} />
                 </Route>
               </Switch>
             </Router>

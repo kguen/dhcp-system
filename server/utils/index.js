@@ -1,5 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const dayjs = require('dayjs');
+const storage = require('node-persist');
+const localizedFormat = require('dayjs/plugin/localizedFormat');
+const { exec } = require('child_process');
 const { Netmask, ip2long, long2ip } = require('netmask');
 const { Subnet, Device, User } = require('../models');
 
@@ -168,6 +172,38 @@ const updateFirewallScript = async () => {
   );
 };
 
+const restartDHCPService = async () => {
+  const restart = await storage.getItem('restartDHCP');
+  if (restart) {
+    exec(
+      // 'sudo systemctl restart dhcpd.service',
+      'echo -n "Restart DHCP service..."',
+      async (error, stdout, stderr) => {
+        if (error) {
+          // eslint-disable-next-line no-console
+          console.log(`error: ${error.message}`);
+          return;
+        }
+        if (stderr) {
+          // eslint-disable-next-line no-console
+          console.log(`stderr: ${stderr}`);
+          return;
+        }
+        // eslint-disable-next-line no-console
+        console.log(stdout);
+
+        await Promise.all[
+          (Device.update({ waiting: false }, { where: { waiting: true } }),
+          storage.setItem('restartDHCP', false))
+        ];
+        dayjs.extend(localizedFormat);
+        // eslint-disable-next-line no-console
+        console.log(`DHCP service restarted: ${dayjs().format('llll')}`);
+      }
+    );
+  }
+};
+
 module.exports = {
   getPagination,
   getPagingData,
@@ -178,4 +214,5 @@ module.exports = {
   updateSubnetConfig,
   updateHostConfig,
   updateFirewallScript,
+  restartDHCPService,
 };

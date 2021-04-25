@@ -1,3 +1,4 @@
+const storage = require('node-persist');
 const ldapjs = require('ldapjs');
 const ldapConfig = require('../config/ldapConfig');
 const { passwordRegex } = require('../constants');
@@ -317,6 +318,8 @@ const destroy = (req, res) => {
                         updateHostConfig(userToDelete.organization.subnet),
                         updateFirewallScript(),
                       ]);
+                      // update persistent flag
+                      await storage.setItem('restartDHCP', true);
                       res.status(200).json({
                         message: 'User deleted successfully!',
                       });

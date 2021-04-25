@@ -38,7 +38,7 @@ export const Login = () => {
           type: ALERT_TYPE.success,
           message: 'Đăng nhập thành công!',
         });
-        history.push(data.user.isAdmin ? '/orgs' : '/profile');
+        history.push(data.user.isAdmin ? '/devices' : '/profile');
       })
       .catch(err => {
         if (err.response?.status === 401) {

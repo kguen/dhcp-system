@@ -241,7 +241,11 @@ export const UserDevices = () => {
               <td className="text-center font-size-sm">{item.macAddress}</td>
               <td className="text-center font-size-sm">{item.ipAddress}</td>
               <td className="text-center font-size-sm font-w600">
-                {item.enabled ? (
+                {item.waiting ? (
+                  <span className="ml-1 px-2 py-1 rounded bg-warning-light text-warning">
+                    Đang chờ cập nhật
+                  </span>
+                ) : item.enabled ? (
                   <span className="ml-1 px-2 py-1 rounded bg-success-light text-success">
                     Đang hoạt động
                   </span>

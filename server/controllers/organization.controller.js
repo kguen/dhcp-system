@@ -1,4 +1,5 @@
 const fs = require('fs');
+const storage = require('node-persist');
 const {
   getPagination,
   getPagingData,
@@ -150,13 +151,18 @@ const destroy = async (req, res) => {
             )
           );
           await transaction.commit();
-          // update subnet config and firewall script after commit
-          await Promise.all([updateSubnetConfig(id), updateFirewallScript()]);
+          await Promise.all([
+            // update subnet config and firewall script after commit
+            updateSubnetConfig(id),
+            updateFirewallScript(),
+          ]);
           // move old subnet hosts to archive
           fs.renameSync(
             `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}`,
             `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}.old`
           );
+          // update persistent flag
+          await storage.setItem('restartDHCP', true);
           res.status(200).json({
             message: 'Organization deleted successfully!',
           });

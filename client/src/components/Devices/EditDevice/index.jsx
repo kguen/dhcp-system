@@ -79,7 +79,7 @@ export const EditDevice = ({ doSubmit, initialData, orgList, userList }) => {
         <Form noValidate onSubmit={handleSubmit(onSubmit)}>
           <Modal.Header className="block-header bg-body px-3">
             <i className="far fa-fw fa-edit mr-2" />
-            <Modal.Title className="block-title">Cập nhật subnet</Modal.Title>
+            <Modal.Title className="block-title">Cập nhật thiết bị</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <Form.Row>

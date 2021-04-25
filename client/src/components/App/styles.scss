@@ -16,10 +16,18 @@ label {
 
 .app-container {
   position: relative;
+  padding-bottom: 2.5rem;
+
+  .banner {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    z-index: 10000;
+  }
 
   .my-alert {
     position: fixed;
-    z-index: 100;
+    z-index: 20000;
     top: 1.2rem;
   }
 

@@ -1,4 +1,5 @@
 const fs = require('fs');
+const storage = require('node-persist');
 const { v4 } = require('is-cidr');
 const { ip2long, long2ip } = require('netmask');
 const {
@@ -67,6 +68,8 @@ const create = (req, res) => {
       try {
         // update subnet config
         await updateSubnetConfig(result.id);
+        // update persistent flag
+        await storage.setItem('restartDHCP', true);
         res.status(201).json({
           message: 'Created subnet successfully!',
           result,
@@ -185,6 +188,8 @@ const update = async (req, res) => {
                 `/etc/dhcp/hosts/hosts-${subnetToUpdate.vlan}.old`
               );
             }
+            // update persistent flag
+            await storage.setItem('restartDHCP', true);
           }
           const result = await Subnet.findByPk(id, {
             include: [
@@ -254,6 +259,8 @@ const destroy = async (req, res) => {
           `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}`,
           `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}.old`
         );
+        // update persistent flag
+        await storage.setItem('restartDHCP', true);
         res.status(200).json({
           message: 'Subnet deleted successfully!',
         });
