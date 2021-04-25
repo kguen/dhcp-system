@@ -153,7 +153,7 @@ export const AddDevice = ({ doSubmit, orgList, userList }) => {
                 </Form.Control.Feedback>
                 <Form.Text className="text-muted long-desc">
                   ・Sử dụng lệnh <code>ipconfig /all</code> (Windows) hoặc{' '}
-                  <code>ip show list</code> (Linux) để lấy địa chỉ MAC của thiết
+                  <code>ip link show</code> (Linux) để lấy địa chỉ MAC của thiết
                   bị. <br /> ・Đối với máy tính, lưu ý lựa chọn địa chỉ MAC
                   tương ứng với card mạng (Wifi / Ethernet) sử dụng để truy cập
                   hệ thống. <br />
