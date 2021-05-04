@@ -79,7 +79,7 @@ const userWithBase64Avatar = user => {
 const createBaseConfig = () =>
   fs.promises.copyFile(
     path.join(__dirname, '../static/templates/dhcpd.example'),
-    '/etc/dhcpd.conf'
+    `${process.env.DHCP_CONFIG_PATH}/dhcpd.conf`
   );
 
 const updateHostConfig = async subnet => {
@@ -101,7 +101,7 @@ const updateHostConfig = async subnet => {
     'utf-8'
   );
   return fs.promises.writeFile(
-    `/etc/dhcp/hosts/hosts-${subnet.vlan}`,
+    `${process.env.DHCP_CONFIG_PATH}/hosts/hosts-${subnet.vlan}`,
     devices.reduce(
       (acc, device) =>
         `${
@@ -130,7 +130,7 @@ const updateSubnetConfig = async (updateId = null) => {
       ? [updateHostConfig(updatedSubnet)]
       : subnets.map(subnet => updateHostConfig(subnet))),
     fs.promises.writeFile(
-      '/etc/dhcp/subnets',
+      `${process.env.DHCP_CONFIG_PATH}/subnets`,
       subnets.reduce(
         (acc, subnet) =>
           `${

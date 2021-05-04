@@ -158,8 +158,8 @@ const destroy = async (req, res) => {
           ]);
           // move old subnet hosts to archive
           fs.renameSync(
-            `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}`,
-            `/etc/dhcp/hosts/hosts-${subnetToDelete.vlan}.old`
+            `${process.env.DHCP_CONFIG_PATH}/hosts/hosts-${subnetToDelete.vlan}`,
+            `${process.env.DHCP_CONFIG_PATH}/hosts/hosts-${subnetToDelete.vlan}.old`
           );
           // update persistent flag
           await storage.setItem('restartDHCP', true);

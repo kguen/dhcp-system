@@ -6,11 +6,11 @@
   },
   "main": "index.js",
   "scripts": {
-    "start": "sudo node -r dotenv/config index.js",
-    "dev": "sudo nodemon -r dotenv/config --ignore seeders/ --ignore migrations/ --ignore scripts/ index.js",
+    "start": "node -r dotenv/config index.js",
+    "dev": "nodemon -r dotenv/config --ignore seeders/ --ignore migrations/ --ignore scripts/ index.js",
     "ldap-seed": "node -r dotenv/config scripts/seedLDAP.js",
     "ldap-purge": "node -r dotenv/config scripts/purgeLDAP.js",
-    "ip-config": "sudo node scripts/updateIpConfig.js",
+    "ip-config": "node scripts/updateIpConfig.js",
     "db-setup": "npx sequelize db:migrate && npx sequelize db:seed:all && yarn run ldap-seed && yarn run ip-config",
     "db-purge": "npx sequelize db:migrate:undo:all && yarn run ldap-purge"
   },

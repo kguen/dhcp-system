@@ -23,31 +23,31 @@ module.exports = {
         updatedAt: new Date(),
       },
       {
-        userId: usersToId.binhnn,
+        userId: usersToId.hanv,
         type: 'image/jpeg',
-        name: 'binhnn.jpg',
+        name: 'hanv.jpg',
         data: fs.readFileSync(
-          path.join(__dirname, '../static/default/binhnn.jpg')
+          path.join(__dirname, '../static/default/hanv.jpg')
         ),
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        userId: usersToId.nguyenthanhthuy,
+        userId: usersToId.thaina,
         type: 'image/jpeg',
-        name: 'nguyenthanhthuy.jpg',
+        name: 'thaina.jpg',
         data: fs.readFileSync(
-          path.join(__dirname, '../static/default/nguyenthanhthuy.jpg')
+          path.join(__dirname, '../static/default/thaina.jpg')
         ),
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        userId: usersToId.thuyhq,
+        userId: usersToId.trinhcd,
         type: 'image/jpeg',
-        name: 'thuyhq.jpg',
+        name: 'trinhcd.jpg',
         data: fs.readFileSync(
-          path.join(__dirname, '../static/default/thuyhq.jpg')
+          path.join(__dirname, '../static/default/trinhcd.jpg')
         ),
         createdAt: new Date(),
         updatedAt: new Date(),

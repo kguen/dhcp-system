@@ -5,5 +5,5 @@ subnet *base* netmask *mask* {
   option subnet-mask *mask*;
   range dynamic-bootp *firstIP* *lastIP*;
 
-  include "/etc/dhcp/hosts/hosts-*vlan*";
+  include "/home/khoa/dhcp/hosts/hosts-*vlan*";
 }

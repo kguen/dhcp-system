@@ -12,10 +12,10 @@ module.exports = {
 
     return queryInterface.bulkInsert('Users', [
       {
-        username: 'binhnn',
-        fullName: 'Nguyễn Ngọc Bình',
+        username: 'hanv',
+        fullName: 'Nguyễn Việt Hà',
         position: 'Hiệu trưởng',
-        email: 'binhnn@vnu.edu.vn',
+        email: 'hanv@vnu.edu.vn',
         phone: '01234567890',
         isAdmin: false,
         organizationId: orgsToId.bgh,
@@ -23,10 +23,10 @@ module.exports = {
         updatedAt: new Date(),
       },
       {
-        username: 'nguyenthanhthuy',
-        fullName: 'Nguyễn Thanh Thủy',
+        username: 'thaina',
+        fullName: 'Nguyễn Anh Thái',
         position: 'Phó hiệu trưởng',
-        email: 'nguyenthanhthuy@vnu.edu.vn',
+        email: 'thaina@vnu.edu.vn',
         phone: '01234567890',
         isAdmin: false,
         organizationId: orgsToId.bgh,
@@ -34,9 +34,10 @@ module.exports = {
         updatedAt: new Date(),
       },
       {
-        username: 'thuyhq',
-        fullName: 'Hà Quang Thụy',
-        email: 'thuyhq@vnu.edu.vn',
+        username: 'trinhcd',
+        fullName: 'Chử Đức Trình',
+        position: 'Phó hiệu trưởng',
+        email: 'trinhcd@vnu.edu.vn',
         phone: '01234567890',
         isAdmin: false,
         organizationId: orgsToId.bgh,
