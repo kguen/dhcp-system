@@ -157,10 +157,12 @@ const destroy = async (req, res) => {
             updateFirewallScript(),
           ]);
           // move old subnet hosts to archive
-          fs.renameSync(
-            `${process.env.DHCP_CONFIG_PATH}/hosts/hosts-${subnetToDelete.vlan}`,
-            `${process.env.DHCP_CONFIG_PATH}/hosts/hosts-${subnetToDelete.vlan}.old`
-          );
+          if (subnetToDelete) {
+            fs.renameSync(
+              `${process.env.DHCP_CONFIG_PATH}/hosts/hosts-${subnetToDelete.vlan}`,
+              `${process.env.DHCP_CONFIG_PATH}/hosts/hosts-${subnetToDelete.vlan}.old`
+            );
+          }
           // update persistent flag
           await storage.setItem('restartDHCP', true);
           res.status(200).json({

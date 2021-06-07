@@ -147,7 +147,7 @@ const update = async (req, res) => {
               devices.length >
               ip2long(subnet.lastIP) - ip2long(subnet.firstIP) + 1
             ) {
-              return res.status(500).json({
+              return res.status(400).json({
                 type: 'SubnetSizeError',
                 message:
                   "New subnet doesn't have enough address for all of organization's devices!",

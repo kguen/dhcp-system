@@ -193,7 +193,7 @@ const update = async (req, res) => {
       });
       ipAddress = await getNewIpFromUserId(req.body?.userId);
       if (!ipAddress) {
-        return res.status(500).json({
+        return res.status(403).json({
           message:
             "The subnet that this user belongs to doesn't exists or has run out of addresses!",
           type: 'AddressError',

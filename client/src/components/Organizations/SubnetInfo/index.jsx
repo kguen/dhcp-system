@@ -106,7 +106,7 @@ export const SubnetInfo = () => {
           err.response?.data?.errors?.name === 'SequelizeUniqueConstraintError'
         ) {
           throw new Error('VlanNameError');
-        } else if (err.response.data.type === 'SubnetSizeError') {
+        } else if (err.response?.data?.type === 'SubnetSizeError') {
           throw new Error('SubnetSizeError');
         } else {
           setAlert({
